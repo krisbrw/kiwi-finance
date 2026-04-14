@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiwi Finance Dashboard</title>
+    <style>
+        :root {
+            --sky: #dbeefe;
+            --sky-deep: #9ec8ed;
+            --kiwi: #96d94e;
+            --kiwi-deep: #5d9831;
+            --mango: #ffb74d;
+            --berry: #0d3b66;
+            --paper: #fffdf7;
+            --cream: rgba(255, 255, 255, 0.86);
+            --ink: #10212b;
+            --muted: #546572;
+            --line: rgba(16, 33, 43, 0.14);
+            --danger: #9c3d2a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.5), transparent 24%),
+                linear-gradient(180deg, #b7d8f3 0%, #e5f2fc 52%, #f6f2de 100%);
+        }
+
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 34px 18px 56px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .kicker {
+            margin: 0 0 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 5vw, 4.3rem);
+            line-height: 0.95;
+        }
+
+        .lede {
+            margin: 10px 0 0;
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.02rem;
+            line-height: 1.6;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 52px;
+            padding: 0 18px;
+            border: 3px solid var(--berry);
+            border-radius: 999px;
+            color: var(--berry);
+            background: rgba(255, 255, 255, 0.72);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .summary-grid,
+        .chart-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            margin: 24px 0 18px;
+        }
+
+        .chart-grid {
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        }
+
+        .card {
+            background: var(--cream);
+            border: 3px solid rgba(13, 59, 102, 0.18);
+            border-radius: 28px;
+            padding: 22px;
+            box-shadow: 0 18px 40px rgba(32, 72, 102, 0.08);
+            backdrop-filter: blur(8px);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+            align-items: end;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .field input,
+        .field select,
+        .filter-button,
+        .chart-button {
+            min-height: 46px;
+            padding: 0 14px;
+            border: 2px solid rgba(13, 59, 102, 0.18);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.88);
+            color: var(--ink);
+            font: inherit;
+        }
+
+        .filter-button,
+        .chart-button {
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .summary-card {
+            min-height: 142px;
+        }
+
+        .label {
+            margin: 0 0 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .value {
+            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            line-height: 1;
+            color: var(--berry);
+        }
+
+        .subvalue {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .chart-card header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .chart-note {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .chart-shell {
+            position: relative;
+            height: 320px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+        }
+
+        .chart-shell canvas {
+            min-width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading,
+        .error {
+            display: grid;
+            place-items: center;
+            min-height: 280px;
+            border: 2px dashed var(--line);
+            border-radius: 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error {
+            color: var(--danger);
+            background: rgba(255, 241, 236, 0.85);
+        }
+
+        .microcopy {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.93rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 760px) {
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+    <main>
+        <div class="topbar">
+            <div>
+                <p class="kicker">Custom Analytics Layer</p>
+                <h1>Spending Dashboard</h1>
+                <p class="lede">
+                    Zoom with your mouse wheel or pinch, drag to zoom, and hold Shift while dragging to pan.
+                    Use the date filters to narrow the dataset before rendering the charts.
+                </p>
+            </div>
+            <a class="nav-link" href="/">Back To Control Panel</a>
+        </div>
+
+        <section class="summary-grid">
+            <article class="card summary-card">
+                <p class="label">Posted Spend</p>
+                <p class="value" id="posted-spend">$0</p>
+                <p class="subvalue">Across all posted transactions in the local store.</p>
+            </article>
+            <article class="card summary-card">
+                <p class="label">Transactions</p>
+                <p class="value" id="transaction-count">0</p>
+                <p class="subvalue">Total synced rows currently available to visualize.</p>
+            </article>
+            <article class="card summary-card">
+                <p class="label">Accounts</p>
+                <p class="value" id="account-count">0</p>
+                <p class="subvalue">Connected accounts included in local balances.</p>
+            </article>
+            <article class="card summary-card">
+                <p class="label">Latest Activity</p>
+                <p class="value" id="latest-transaction">n/a</p>
+                <p class="subvalue">Most recent transaction date currently stored.</p>
+            </article>
+        </section>
+
+        <section class="card">
+            <div class="filters">
+                <div class="field">
+                    <label for="start-date">Start Date</label>
+                    <input id="start-date" type="date">
+                </div>
+                <div class="field">
+                    <label for="end-date">End Date</label>
+                    <input id="end-date" type="date">
+                </div>
+                <div class="field">
+                    <label for="include-pending">Transaction Scope</label>
+                    <select id="include-pending">
+                        <option value="false">Posted only</option>
+                        <option value="true">Include pending</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="merchant-limit">Merchant Rows</label>
+                    <select id="merchant-limit">
+                        <option value="8">Top 8</option>
+                        <option value="12">Top 12</option>
+                        <option value="20">Top 20</option>
+                        <option value="30">Top 30</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="bucket-size">Amount Bucket Size</label>
+                    <select id="bucket-size">
+                        <option value="10">$10 buckets</option>
+                        <option value="25">$25 buckets</option>
+                        <option value="50">$50 buckets</option>
+                    </select>
+                </div>
+                <button class="filter-button" id="apply-filters" type="button">Apply Filters</button>
+            </div>
+            <p class="microcopy">
+                Long charts can be explored two ways: scroll sideways within the chart panel for more labels, or zoom and pan directly inside the plot.
+            </p>
+        </section>
+
+        <section class="chart-grid">
+            <article class="card chart-card">
+                <header>
+                    <h2>Spend By Day</h2>
+                    <span class="chart-note">Daily totals</span>
+                </header>
+                <div class="chart-actions">
+                    <button class="chart-button" type="button" data-reset-chart="day">Reset Zoom</button>
+                </div>
+                <div class="chart-shell">
+                    <canvas id="spend-by-day-chart"></canvas>
+                </div>
+            </article>
+
+            <article class="card chart-card">
+                <header>
+                    <h2>Spend By Merchant</h2>
+                    <span class="chart-note">Top merchants by dollars</span>
+                </header>
+                <div class="chart-actions">
+                    <button class="chart-button" type="button" data-reset-chart="merchant">Reset Zoom</button>
+                </div>
+                <div class="chart-shell">
+                    <canvas id="spend-by-merchant-chart"></canvas>
+                </div>
+            </article>
+
+            <article class="card chart-card">
+                <header>
+                    <h2>Spend By Amount</h2>
+                    <span class="chart-note">Transaction counts grouped by amount</span>
+                </header>
+                <div class="chart-actions">
+                    <button class="chart-button" type="button" data-reset-chart="amount">Reset Zoom</button>
+                </div>
+                <div class="chart-shell">
+                    <canvas id="spend-by-amount-chart"></canvas>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        const currencyFormatter = new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+        });
+
+        const charts = {
+            day: null,
+            merchant: null,
+            amount: null,
+        };
+
+        function formatCurrency(value) {
+            return currencyFormatter.format(Number(value || 0));
+        }
+
+        function showCanvasMessage(canvasId, message, isError = false) {
+            const canvas = document.getElementById(canvasId);
+            const shell = canvas.parentElement;
+            shell.innerHTML = `<div class="${isError ? "error" : "loading"}">${message}</div>`;
+        }
+
+        function rebuildCanvas(canvasId) {
+            const shell = document.getElementById(canvasId).parentElement;
+            shell.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+            return document.getElementById(canvasId);
+        }
+
+        function destroyExistingChart(key, canvasId) {
+            if (charts[key]) {
+                charts[key].destroy();
+                charts[key] = null;
+            }
+            return rebuildCanvas(canvasId);
+        }
+
+        function buildQuery(params) {
+            const query = new URLSearchParams();
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== "" && value !== null && value !== undefined) {
+                    query.set(key, value);
+                }
+            });
+            return query.toString();
+        }
+
+        function getFilters() {
+            return {
+                startDate: document.getElementById("start-date").value,
+                endDate: document.getElementById("end-date").value,
+                includePending: document.getElementById("include-pending").value === "true",
+                merchantLimit: document.getElementById("merchant-limit").value,
+                bucketSize: document.getElementById("bucket-size").value,
+            };
+        }
+
+        async function fetchJson(url) {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || data.message || `Request failed for ${url}`);
+            }
+            return data;
+        }
+
+        function chartInteractionConfig(axisMode) {
+            return {
+                legend: { display: false },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: axisMode,
+                        modifierKey: "shift",
+                    },
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        drag: {
+                            enabled: true,
+                            backgroundColor: "rgba(13, 59, 102, 0.12)",
+                        },
+                        mode: axisMode,
+                    },
+                },
+            };
+        }
+
+        function buildLineChart(canvasId, rows) {
+            if (!rows.length) {
+                showCanvasMessage(canvasId, "No transaction data yet for that date range.");
+                return;
+            }
+
+            const canvas = destroyExistingChart("day", canvasId);
+            canvas.style.minWidth = `${Math.max(rows.length * 34, 960)}px`;
+
+            charts.day = new Chart(canvas, {
+                type: "line",
+                data: {
+                    labels: rows.map((row) => row.date),
+                    datasets: [{
+                        label: "Spend",
+                        data: rows.map((row) => row.total_spend),
+                        borderColor: "#0d3b66",
+                        backgroundColor: "rgba(13, 59, 102, 0.14)",
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 3,
+                        pointBackgroundColor: "#96d94e",
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        ...chartInteractionConfig("x"),
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${formatCurrency(ctx.parsed.y)}`,
+                            },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: (value) => formatCurrency(value),
+                            },
+                            grid: { color: "rgba(16, 33, 43, 0.08)" },
+                        },
+                        x: {
+                            grid: { display: false },
+                        },
+                    },
+                },
+            });
+        }
+
+        function buildHorizontalBarChart(canvasId, rows) {
+            if (!rows.length) {
+                showCanvasMessage(canvasId, "No merchant data yet for that date range.");
+                return;
+            }
+
+            const canvas = destroyExistingChart("merchant", canvasId);
+            canvas.style.minWidth = "100%";
+            canvas.style.minHeight = `${Math.max(rows.length * 48, 320)}px`;
+
+            charts.merchant = new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: rows.map((row) => row.merchant),
+                    datasets: [{
+                        data: rows.map((row) => row.total_spend),
+                        backgroundColor: [
+                            "#96d94e",
+                            "#7fca45",
+                            "#6dbc3d",
+                            "#58a934",
+                            "#ffb74d",
+                            "#f39c35",
+                            "#d97627",
+                        ],
+                        borderRadius: 10,
+                    }],
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        ...chartInteractionConfig("y"),
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${formatCurrency(ctx.parsed.x)}`,
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: (value) => formatCurrency(value),
+                            },
+                            grid: { color: "rgba(16, 33, 43, 0.08)" },
+                        },
+                        y: {
+                            grid: { display: false },
+                        },
+                    },
+                },
+            });
+        }
+
+        function buildBucketChart(canvasId, rows) {
+            if (!rows.length) {
+                showCanvasMessage(canvasId, "No amount-bucket data yet for that date range.");
+                return;
+            }
+
+            const canvas = destroyExistingChart("amount", canvasId);
+            canvas.style.minWidth = `${Math.max(rows.length * 90, 960)}px`;
+
+            charts.amount = new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: rows.map((row) => row.bucket_label),
+                    datasets: [{
+                        label: "Transactions",
+                        data: rows.map((row) => row.transaction_count),
+                        backgroundColor: "rgba(255, 183, 77, 0.9)",
+                        borderColor: "#d9881b",
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        ...chartInteractionConfig("x"),
+                        tooltip: {
+                            callbacks: {
+                                afterBody: (items) => {
+                                    const row = rows[items[0].dataIndex];
+                                    return `Total spend: ${formatCurrency(row.total_spend)}`;
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: "rgba(16, 33, 43, 0.08)" },
+                        },
+                        x: {
+                            grid: { display: false },
+                        },
+                    },
+                },
+            });
+        }
+
+        async function loadSummary() {
+            const summary = await fetchJson("/api/dashboard/summary");
+            document.getElementById("posted-spend").textContent = formatCurrency(summary.total_posted_spend);
+            document.getElementById("transaction-count").textContent = summary.transaction_count ?? 0;
+            document.getElementById("account-count").textContent = summary.account_count ?? 0;
+            document.getElementById("latest-transaction").textContent = summary.latest_transaction_date || "n/a";
+        }
+
+        async function loadCharts() {
+            const filters = getFilters();
+            const shared = {
+                start_date: filters.startDate,
+                end_date: filters.endDate,
+                include_pending: String(filters.includePending),
+            };
+
+            const [byDay, byMerchant, byAmount] = await Promise.all([
+                fetchJson(`/api/dashboard/spend-by-day?${buildQuery(shared)}`),
+                fetchJson(`/api/dashboard/spend-by-merchant?${buildQuery({
+                    ...shared,
+                    limit: filters.merchantLimit,
+                })}`),
+                fetchJson(`/api/dashboard/spend-by-amount?${buildQuery({
+                    ...shared,
+                    bucket_size: filters.bucketSize,
+                })}`),
+            ]);
+
+            buildLineChart("spend-by-day-chart", byDay.points || []);
+            buildHorizontalBarChart("spend-by-merchant-chart", byMerchant.points || []);
+            buildBucketChart("spend-by-amount-chart", byAmount.points || []);
+        }
+
+        async function boot() {
+            try {
+                await loadSummary();
+                await loadCharts();
+            } catch (error) {
+                showCanvasMessage("spend-by-day-chart", error.message, true);
+                showCanvasMessage("spend-by-merchant-chart", error.message, true);
+                showCanvasMessage("spend-by-amount-chart", error.message, true);
+            }
+        }
+
+        document.getElementById("apply-filters").addEventListener("click", () => {
+            boot();
+        });
+
+        document.querySelectorAll("[data-reset-chart]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const chartKey = button.dataset.resetChart;
+                if (charts[chartKey]) {
+                    charts[chartKey].resetZoom();
+                }
+            });
+        });
+
+        boot();
+    </script>
+</body>
+</html>
