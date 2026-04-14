@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Kiwi Finance daily sandbox pipeline on AWS Lambda and EventBridge Scheduler
+
+Parameters:
+  CodeBucket:
+    Type: String
+    Description: S3 bucket that stores the Lambda deployment package zip
+  CodeKey:
+    Type: String
+    Description: S3 key for the Lambda deployment package zip
+  PlaidClientId:
+    Type: String
+    NoEcho: true
+  PlaidSecret:
+    Type: String
+    NoEcho: true
+  PlaidEnv:
+    Type: String
+    Default: sandbox
+    AllowedValues:
+      - sandbox
+      - development
+      - production
+  KiwiUserId:
+    Type: String
+    Default: aws-sandbox-user
+  ExportBucket:
+    Type: String
+    Description: S3 bucket for exported account and transaction CSV files
+  AccountsPrefix:
+    Type: String
+    Default: accounts
+  TransactionsPrefix:
+    Type: String
+    Default: transactions
+  StateBucket:
+    Type: String
+    Description: S3 bucket that stores the SQLite state snapshot
+  StateKey:
+    Type: String
+    Default: state/kiwi_finance.db
+  ScheduleExpression:
+    Type: String
+    Default: cron(0 13 * * ? *)
+  LambdaMemorySize:
+    Type: Number
+    Default: 512
+    MinValue: 128
+    MaxValue: 10240
+  LambdaTimeout:
+    Type: Number
+    Default: 60
+    MinValue: 3
+    MaxValue: 900
+
+Resources:
+  KiwiFinanceFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: KiwiFinanceS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${StateBucket}
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - !Ref StateKey
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${ExportBucket}/${AccountsPrefix}/*
+                  - !Sub arn:aws:s3:::${ExportBucket}/${TransactionsPrefix}/*
+                  - !Sub arn:aws:s3:::${StateBucket}/${StateKey}
+
+  KiwiFinanceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-daily-job
+      Description: Daily Kiwi Finance sandbox pipeline
+      Runtime: python3.12
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt KiwiFinanceFunctionRole.Arn
+      MemorySize: !Ref LambdaMemorySize
+      Timeout: !Ref LambdaTimeout
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      Environment:
+        Variables:
+          PLAID_CLIENT_ID: !Ref PlaidClientId
+          PLAID_SECRET: !Ref PlaidSecret
+          PLAID_ENV: !Ref PlaidEnv
+          KIWI_USER_ID: !Ref KiwiUserId
+          AWS_S3_BUCKET: !Ref ExportBucket
+          AWS_S3_ACCOUNTS_PREFIX: !Ref AccountsPrefix
+          AWS_S3_TRANSACTIONS_PREFIX: !Ref TransactionsPrefix
+          AWS_STATE_BUCKET: !Ref StateBucket
+          AWS_STATE_KEY: !Ref StateKey
+          DATABASE_PATH: /tmp/kiwi_finance.db
+
+  KiwiFinanceSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${AWS::StackName}-daily-schedule
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt KiwiFinanceFunction.Arn
+          Id: KiwiFinanceLambdaTarget
+          Input: !Sub |
+            {"source":"${AWS::StackName}-scheduler"}
+
+  KiwiFinanceSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KiwiFinanceFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt KiwiFinanceSchedule.Arn
+
+Outputs:
+  LambdaFunctionName:
+    Value: !Ref KiwiFinanceFunction
+  LambdaFunctionArn:
+    Value: !GetAtt KiwiFinanceFunction.Arn
+  ScheduleName:
+    Value: !Ref KiwiFinanceSchedule

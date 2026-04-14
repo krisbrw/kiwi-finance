@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiwi Finance</title>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <style>
+        :root {
+            --sky: #a7c6e8;
+            --sky-deep: #92b8e3;
+            --kiwi: #98d44b;
+            --kiwi-deep: #84c437;
+            --seed: #080808;
+            --rind: #907500;
+            --cream: #ffffff;
+            --paper: #f7f6f0;
+            --text: #111111;
+            --muted: #42525e;
+            --status-bg: rgba(255, 253, 247, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Arial Black", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.3) 0, transparent 18%),
+                radial-gradient(circle at 86% 12%, rgba(255, 255, 255, 0.22) 0, transparent 18%),
+                linear-gradient(180deg, var(--sky) 0%, #b5d2ef 100%);
+        }
+
+        main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.95fr);
+            gap: 28px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2.8rem, 7vw, 5.8rem);
+            line-height: 0.92;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 1.08rem;
+            line-height: 1.6;
+            max-width: 650px;
+        }
+
+        .hero-copy {
+            position: relative;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 8px 14px;
+            border: 3px solid var(--seed);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-badge {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-height: 310px;
+        }
+
+        .kiwi-mark {
+            position: relative;
+            width: min(100%, 320px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: var(--kiwi);
+            border: 9px solid var(--rind);
+            box-shadow: 0 26px 52px rgba(28, 56, 84, 0.18);
+        }
+
+        .kiwi-center {
+            position: absolute;
+            inset: 28%;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--cream);
+            border: 3px solid rgba(8, 8, 8, 0.28);
+            font-size: clamp(2.4rem, 5vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+            transform: translateY(1px);
+        }
+
+        .seed {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 11px;
+            height: 62px;
+            margin: -31px 0 0 -5.5px;
+            border-radius: 999px;
+            background: var(--seed);
+            transform-origin: center -96px;
+        }
+
+        .panel {
+            background: rgba(255, 253, 247, 0.88);
+            border: 4px solid var(--seed);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 24px 50px rgba(24, 45, 62, 0.14);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .panel-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .panel-kicker::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--kiwi);
+            border: 3px solid var(--seed);
+            flex: 0 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 1.15rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        button,
+        a.action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 62px;
+            padding: 14px 16px;
+            border: 3px solid var(--seed);
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 0.98rem;
+            font-weight: 900;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease, filter 140ms ease;
+        }
+
+        button:hover,
+        a.action-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
+            filter: saturate(1.04);
+        }
+
+        .primary {
+            background: var(--kiwi);
+            color: var(--text);
+        }
+
+        .primary:hover {
+            background: var(--kiwi-deep);
+        }
+
+        .secondary {
+            background: #ffd769;
+            color: var(--text);
+        }
+
+        .secondary:hover {
+            background: #f2c23f;
+        }
+
+        .ghost {
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--text);
+        }
+
+        .group {
+            margin-top: 22px;
+            padding-top: 22px;
+            border-top: 3px dashed rgba(8, 8, 8, 0.18);
+        }
+
+        .status {
+            margin-top: 24px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: var(--status-bg);
+            border: 3px solid var(--seed);
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.94rem;
+        }
+
+        .status[data-state="error"] {
+            background: #ffe2d7;
+        }
+
+        .status[data-state="success"] {
+            background: #ebffd8;
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-badge {
+                order: -1;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-top: 32px;
+            }
+
+            .panel {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow">Plaid to SQLite to S3</div>
+                <h1>Kiwi Finance</h1>
+                <p class="subtitle">
+                    A bright little finance pipeline for sandbox banking data, local storage, and cloud exports.
+                    Connect Plaid, fetch records into SQLite, and push clean CSV snapshots into Amazon S3.
+                </p>
+            </div>
+
+            <div class="hero-badge" aria-hidden="true">
+                <div class="kiwi-mark">
+                    <div class="seed" style="transform: rotate(0deg);"></div>
+                    <div class="seed" style="transform: rotate(30deg) scaleY(0.55);"></div>
+                    <div class="seed" style="transform: rotate(60deg) scaleY(0.34);"></div>
+                    <div class="seed" style="transform: rotate(90deg) scaleY(0.58);"></div>
+                    <div class="seed" style="transform: rotate(120deg) scaleY(0.34);"></div>
+                    <div class="seed" style="transform: rotate(150deg) scaleY(0.55);"></div>
+                    <div class="seed" style="transform: rotate(180deg) scaleY(0.58);"></div>
+                    <div class="seed" style="transform: rotate(210deg) scaleY(0.34);"></div>
+                    <div class="seed" style="transform: rotate(240deg) scaleY(0.55);"></div>
+                    <div class="seed" style="transform: rotate(270deg) scaleY(0.58);"></div>
+                    <div class="seed" style="transform: rotate(300deg) scaleY(0.34);"></div>
+                    <div class="seed" style="transform: rotate(330deg) scaleY(0.55);"></div>
+                    <div class="kiwi-center">Kiwi</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="section-title">Run The Workflow</h2>
+                <div class="panel-kicker">Control Panel</div>
+            </div>
+
+            <div class="grid">
+                <button id="link-button" class="primary">Connect Bank Account</button>
+                <button class="secondary" data-endpoint="/accounts">Fetch Accounts From Plaid</button>
+                <button class="secondary" data-endpoint="/transactions">Fetch Transactions From Plaid</button>
+                <button class="secondary" data-endpoint="/simulate_daily_transactions">Simulate Daily Transactions</button>
+                <button class="primary" data-endpoint="/run_daily_sandbox_pipeline">Run Daily Sandbox Pipeline</button>
+                <button class="primary" data-endpoint="/export_accounts_to_s3">Export Accounts To S3</button>
+                <button class="primary" data-endpoint="/export_transactions_to_s3">Export Transactions To S3</button>
+                <button class="ghost" data-endpoint="/sandbox_connect">Quick Sandbox Connect</button>
+            </div>
+
+            <div class="group">
+                <h2 class="section-title">Inspect Saved Data</h2>
+                <div class="grid">
+                    <a class="action-link ghost" href="/local_accounts" target="_blank" rel="noreferrer">View Local Accounts</a>
+                    <a class="action-link ghost" href="/local_transactions" target="_blank" rel="noreferrer">View Local Transactions</a>
+                </div>
+            </div>
+
+            <div id="status" class="status" data-state="idle">
+                Ready. Connect a sandbox account, simulate new data, sync transactions, and export to S3.
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const statusEl = document.getElementById("status");
+
+        function setStatus(message, state = "idle") {
+            statusEl.textContent = message;
+            statusEl.dataset.state = state;
+        }
+
+        async function callEndpoint(endpoint) {
+            setStatus(`Running ${endpoint} ...`);
+
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    setStatus(`Request failed for ${endpoint}\n\n${JSON.stringify(data, null, 2)}`, "error");
+                    return;
+                }
+
+                setStatus(`Request completed for ${endpoint}\n\n${JSON.stringify(data, null, 2)}`, "success");
+            } catch (error) {
+                setStatus(`Unexpected error for ${endpoint}\n\n${error.message}`, "error");
+            }
+        }
+
+        document.querySelectorAll("button[data-endpoint]").forEach((button) => {
+            button.addEventListener("click", () => callEndpoint(button.dataset.endpoint));
+        });
+
+        document.getElementById("link-button").onclick = async function () {
+            setStatus("Creating Plaid Link token ...");
+
+            const tokenResponse = await fetch("/create_link_token", {
+                method: "POST"
+            });
+
+            const tokenData = await tokenResponse.json();
+
+             if (!tokenResponse.ok) {
+                setStatus(`Failed to create link token\n\n${JSON.stringify(tokenData, null, 2)}`, "error");
+                return;
+            }
+
+            const handler = Plaid.create({
+                token: tokenData.link_token,
+                onSuccess: async function (public_token, metadata) {
+                    setStatus("Plaid Link succeeded. Exchanging public token ...");
+
+                    const exchangeResponse = await fetch("/exchange_public_token", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ public_token })
+                    });
+
+                    const exchangeData = await exchangeResponse.json();
+                    console.log("Exchange result:", exchangeData);
+
+                    if (!exchangeResponse.ok) {
+                        setStatus(`Bank connection failed\n\n${JSON.stringify(exchangeData, null, 2)}`, "error");
+                        return;
+                    }
+
+                    setStatus(
+                        `Bank connected successfully.\n\n${JSON.stringify(exchangeData, null, 2)}\n\nNext step: fetch accounts or transactions.`,
+                        "success"
+                    );
+                },
+                onExit: function (err, metadata) {
+                    console.log("Exited Link", err, metadata);
+                    if (err) {
+                        setStatus(`Plaid Link exited with an error\n\n${JSON.stringify(err, null, 2)}`, "error");
+                        return;
+                    }
+
+                    setStatus("Plaid Link was closed before completion.");
+                }
+            });
+
+            handler.open();
+        };
+    </script>
+</body>
+</html>

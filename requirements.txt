@@ -1,0 +1,5 @@
+plaid-python
+python-dotenv
+requests
+flask
+boto3
