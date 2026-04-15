@@ -51,6 +51,31 @@ def dashboard():
     return render_template("dashboard.html")
 
 
+@app.route("/budget")
+def budget():
+    return render_template("budget.html")
+
+
+@app.route("/view")
+def view():
+    return render_template("view.html")
+
+
+@app.route("/education")
+def education():
+    return render_template("education.html")
+
+
+@app.route("/credit")
+def credit():
+    return render_template("credit.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
 @app.route("/create_link_token", methods=["POST"])
 def create_link_token_route():
     response = create_link_token(USER_ID)

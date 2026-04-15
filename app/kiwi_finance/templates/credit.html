@@ -1,0 +1,425 @@
+{% extends "_layout.html" %}
+
+{% block title %}Credit Tools — Kiwi Finance{% endblock %}
+
+{% block head %}
+<style>
+.page-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, #eff6ff 0%, #faf5ff 50%, #fef2f2 100%);
+    background-size: 300% 300%;
+    animation: bgShift 16s ease infinite;
+}
+@keyframes bgShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+@keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+.page-wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.page-hero { margin-bottom: 48px; animation: fadeUp 0.4s ease both; }
+.page-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--blue-bg); border: 1px solid var(--blue-border, #bfdbfe);
+    color: var(--blue-text, #1e40af); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.page-title { font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.page-sub   { font-size: 16px; color: var(--text-muted); max-width: 580px; line-height: 1.65; }
+
+/* ── Section anchors ── */
+.credit-section { margin-bottom: 64px; scroll-margin-top: 80px; }
+.section-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 14px;
+}
+.section-title { font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 8px; }
+.section-sub   { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.65; }
+
+/* ── Credit score widget ── */
+.score-widget {
+    background: white; border: 1px solid var(--border); border-radius: 20px;
+    padding: 36px; display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center;
+    animation: fadeUp 0.4s ease 0.1s both;
+    margin-bottom: 24px;
+}
+.score-dial { position: relative; width: 160px; height: 160px; flex-shrink: 0; }
+.score-dial svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+.score-dial-text {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+.score-num   { font-size: 36px; font-weight: 800; letter-spacing: -0.04em; color: var(--text); }
+.score-label { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 2px; }
+
+.score-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.score-factor {
+    background: var(--bg); border-radius: 12px; padding: 14px 16px;
+}
+.sf-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px; }
+.sf-value { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.sf-sub   { font-size: 11px; color: var(--text-subtle); margin-top: 2px; }
+.sf-value.good   { color: var(--green); }
+.sf-value.ok     { color: var(--amber); }
+.sf-value.bad    { color: var(--red); }
+
+.report-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.report-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; text-align: center; text-decoration: none; color: inherit;
+    transition: box-shadow 200ms, transform 200ms;
+}
+.report-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.09); transform: translateY(-3px); }
+.rc-logo  { font-size: 32px; margin-bottom: 10px; }
+.rc-name  { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.rc-desc  { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.rc-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 16px; background: var(--green); color: white;
+    border-radius: 8px; font-size: 12px; font-weight: 600;
+    transition: background 150ms;
+}
+.rc-btn:hover { background: var(--green-hover); }
+
+/* ── Card comparison ── */
+.card-filters {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+    animation: fadeUp 0.4s ease 0.15s both;
+}
+.card-filter-btn {
+    padding: 7px 16px; border-radius: 100px;
+    border: 1px solid var(--border); background: white;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; transition: all 150ms;
+}
+.card-filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+.card-filter-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; animation: fadeUp 0.4s ease 0.2s both; }
+
+.cc-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; transition: box-shadow 200ms, transform 200ms;
+}
+.cc-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); transform: translateY(-3px); }
+.cc-card.featured { border-color: var(--green); box-shadow: 0 0 0 2px rgba(22,163,74,0.15); }
+
+.cc-header {
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.cc-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+}
+.cc-badge.best  { background: var(--green-bg); color: var(--green-text); }
+.cc-badge.new   { background: var(--blue-bg); color: var(--blue-text, #1e40af); }
+.cc-badge.value { background: var(--amber-bg); color: #92400e; }
+
+.cc-name    { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.cc-issuer  { font-size: 12px; color: var(--text-subtle); }
+.cc-body    { padding: 16px 20px; }
+.cc-reward  { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: var(--green); margin-bottom: 4px; }
+.cc-reward-label { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.cc-stats   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.cc-stat    { background: var(--bg); border-radius: 9px; padding: 10px 12px; }
+.cc-stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 3px; }
+.cc-stat-value { font-size: 13px; font-weight: 700; }
+.cc-perks   { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+.cc-perk    { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.cc-perk::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+.cc-apply {
+    display: block; text-align: center; padding: 10px;
+    background: var(--green); color: white; border-radius: 9px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    transition: background 150ms;
+}
+.cc-apply:hover { background: var(--green-hover); }
+
+/* ── Lender comparison ── */
+.lenders-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; animation: fadeUp 0.4s ease 0.2s both; }
+.lender-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; transition: box-shadow 200ms, transform 200ms;
+}
+.lender-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); transform: translateY(-3px); }
+.lender-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.lender-name   { font-size: 16px; font-weight: 700; }
+.lender-type   { font-size: 11px; color: var(--text-subtle); margin-top: 2px; }
+.lender-logo   { font-size: 28px; }
+.lender-rate   { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; color: var(--green); margin-bottom: 4px; }
+.lender-rate-label { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+.lender-stats  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.ls-item       { text-align: center; }
+.ls-val        { font-size: 14px; font-weight: 700; }
+.ls-lbl        { font-size: 10px; color: var(--text-subtle); margin-top: 2px; }
+.lender-apply {
+    display: block; text-align: center; padding: 10px;
+    border: 1px solid var(--border); border-radius: 9px;
+    font-size: 13px; font-weight: 600; color: var(--text);
+    text-decoration: none; transition: all 150ms;
+}
+.lender-apply:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+
+@media (max-width: 900px) {
+    .score-widget { grid-template-columns: 1fr; }
+    .score-dial   { margin: 0 auto; }
+    .cards-grid   { grid-template-columns: 1fr 1fr; }
+    .lenders-grid { grid-template-columns: 1fr; }
+    .report-links { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .page-wrap  { padding: 32px 18px 72px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .score-details { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-bg"></div>
+
+<div class="page-wrap">
+    <div class="page-hero">
+        <div class="page-eyebrow">💳 Credit Tools</div>
+        <h1 class="page-title">Your credit, fully in your hands.</h1>
+        <p class="page-sub">Check your free credit report, compare the best credit cards, and find lenders for your next big purchase — all in one place.</p>
+    </div>
+
+    <!-- Free Credit Report -->
+    <div class="credit-section" id="report">
+        <span class="section-eyebrow" style="background:#f3e8ff;color:#6b21a8">📋 Free Credit Report</span>
+        <div class="section-title">Know your score. It's free.</div>
+        <div class="section-sub">You're entitled to a free credit report from each of the three major bureaus every year. Check yours now — no credit card required.</div>
+
+        <div class="score-widget">
+            <div class="score-dial">
+                <svg viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="68" fill="none" stroke="#f3f4f6" stroke-width="12"/>
+                    <circle cx="80" cy="80" r="68" fill="none" stroke="url(#scoreGrad)" stroke-width="12"
+                        stroke-dasharray="427" stroke-dashoffset="107" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#16a34a"/>
+                            <stop offset="100%" stop-color="#22c55e"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="score-dial-text">
+                    <div class="score-num">742</div>
+                    <div class="score-label">Good</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Connect your accounts to see your live credit score and the factors affecting it.</div>
+                <div class="score-details">
+                    <div class="score-factor">
+                        <div class="sf-label">Payment History</div>
+                        <div class="sf-value good">Excellent</div>
+                        <div class="sf-sub">35% of score</div>
+                    </div>
+                    <div class="score-factor">
+                        <div class="sf-label">Credit Utilization</div>
+                        <div class="sf-value ok">18%</div>
+                        <div class="sf-sub">30% of score</div>
+                    </div>
+                    <div class="score-factor">
+                        <div class="sf-label">Credit Age</div>
+                        <div class="sf-value good">7.2 yrs</div>
+                        <div class="sf-sub">15% of score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-links">
+            <a class="report-card" href="https://www.annualcreditreport.com" target="_blank" rel="noopener">
+                <div class="rc-logo">🏛️</div>
+                <div class="rc-name">AnnualCreditReport.com</div>
+                <div class="rc-desc">The official free report site authorized by federal law. Get all three bureaus at once.</div>
+                <span class="rc-btn">Get Free Report →</span>
+            </a>
+            <a class="report-card" href="https://www.creditkarma.com" target="_blank" rel="noopener">
+                <div class="rc-logo">🍀</div>
+                <div class="rc-name">Credit Karma</div>
+                <div class="rc-desc">Free credit scores from TransUnion and Equifax, updated weekly. No credit card needed.</div>
+                <span class="rc-btn">Check Score →</span>
+            </a>
+            <a class="report-card" href="https://www.experian.com/consumer-products/free-credit-report.html" target="_blank" rel="noopener">
+                <div class="rc-logo">📊</div>
+                <div class="rc-name">Experian Free</div>
+                <div class="rc-desc">Free Experian credit report and FICO score. Updated monthly with dark web monitoring.</div>
+                <span class="rc-btn">View Report →</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Credit Cards -->
+    <div class="credit-section" id="cards">
+        <span class="section-eyebrow" style="background:#dbeafe;color:#1e40af">💳 Compare Credit Cards</span>
+        <div class="section-title">Find the card that pays you back.</div>
+        <div class="section-sub">We've compared hundreds of cards so you don't have to. Filter by what matters most to you.</div>
+
+        <div class="card-filters">
+            <button class="card-filter-btn active" onclick="filterCards(this,'all')">All Cards</button>
+            <button class="card-filter-btn" onclick="filterCards(this,'cashback')">💵 Cash Back</button>
+            <button class="card-filter-btn" onclick="filterCards(this,'travel')">✈️ Travel</button>
+            <button class="card-filter-btn" onclick="filterCards(this,'business')">💼 Business</button>
+            <button class="card-filter-btn" onclick="filterCards(this,'student')">🎓 Student</button>
+            <button class="card-filter-btn" onclick="filterCards(this,'secured')">🔒 Secured</button>
+        </div>
+
+        <div class="cards-grid">
+            <div class="cc-card featured" data-type="cashback">
+                <div class="cc-header">
+                    <div><div class="cc-name">Chase Freedom Unlimited</div><div class="cc-issuer">Chase Bank</div></div>
+                    <span class="cc-badge best">Best Overall</span>
+                </div>
+                <div class="cc-body">
+                    <div class="cc-reward">1.5%–5%</div>
+                    <div class="cc-reward-label">Cash back on all purchases</div>
+                    <div class="cc-stats">
+                        <div class="cc-stat"><div class="cc-stat-label">Annual Fee</div><div class="cc-stat-value">$0</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Intro APR</div><div class="cc-stat-value">0% / 15mo</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Sign-up Bonus</div><div class="cc-stat-value">$200</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Regular APR</div><div class="cc-stat-value">20–29%</div></div>
+                    </div>
+                    <div class="cc-perks">
+                        <div class="cc-perk">5% on travel through Chase portal</div>
+                        <div class="cc-perk">3% on dining and drugstores</div>
+                        <div class="cc-perk">No foreign transaction fees</div>
+                    </div>
+                    <a href="#" class="cc-apply">Apply Now →</a>
+                </div>
+            </div>
+
+            <div class="cc-card" data-type="cashback">
+                <div class="cc-header">
+                    <div><div class="cc-name">Citi Double Cash</div><div class="cc-issuer">Citibank</div></div>
+                    <span class="cc-badge value">Best Value</span>
+                </div>
+                <div class="cc-body">
+                    <div class="cc-reward">2%</div>
+                    <div class="cc-reward-label">Flat cash back on everything</div>
+                    <div class="cc-stats">
+                        <div class="cc-stat"><div class="cc-stat-label">Annual Fee</div><div class="cc-stat-value">$0</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Intro APR</div><div class="cc-stat-value">0% / 18mo</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Sign-up Bonus</div><div class="cc-stat-value">$200</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Regular APR</div><div class="cc-stat-value">19–29%</div></div>
+                    </div>
+                    <div class="cc-perks">
+                        <div class="cc-perk">1% when you buy + 1% when you pay</div>
+                        <div class="cc-perk">No category restrictions</div>
+                        <div class="cc-perk">Balance transfer option</div>
+                    </div>
+                    <a href="#" class="cc-apply">Apply Now →</a>
+                </div>
+            </div>
+
+            <div class="cc-card" data-type="travel">
+                <div class="cc-header">
+                    <div><div class="cc-name">Chase Sapphire Preferred</div><div class="cc-issuer">Chase Bank</div></div>
+                    <span class="cc-badge new">Best Travel</span>
+                </div>
+                <div class="cc-body">
+                    <div class="cc-reward">3x–5x</div>
+                    <div class="cc-reward-label">Points on travel and dining</div>
+                    <div class="cc-stats">
+                        <div class="cc-stat"><div class="cc-stat-label">Annual Fee</div><div class="cc-stat-value">$95</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Intro APR</div><div class="cc-stat-value">N/A</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Sign-up Bonus</div><div class="cc-stat-value">60k pts</div></div>
+                        <div class="cc-stat"><div class="cc-stat-label">Regular APR</div><div class="cc-stat-value">21–28%</div></div>
+                    </div>
+                    <div class="cc-perks">
+                        <div class="cc-perk">Points worth 25% more through portal</div>
+                        <div class="cc-perk">Transfer to 14 airline/hotel partners</div>
+                        <div class="cc-perk">$50 annual hotel credit</div>
+                    </div>
+                    <a href="#" class="cc-apply">Apply Now →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lenders -->
+    <div class="credit-section" id="lenders">
+        <span class="section-eyebrow" style="background:#fef3c7;color:#92400e">🏦 Find a Lender</span>
+        <div class="section-title">Compare rates before you borrow.</div>
+        <div class="section-sub">Whether you're buying a home, refinancing, or taking out a personal loan — compare lenders side by side and find the best rate for your situation.</div>
+
+        <div class="lenders-grid">
+            <div class="lender-card">
+                <div class="lender-header">
+                    <div><div class="lender-name">SoFi</div><div class="lender-type">Personal Loans · Mortgages · Refinance</div></div>
+                    <div class="lender-logo">🏦</div>
+                </div>
+                <div class="lender-rate">8.99%</div>
+                <div class="lender-rate-label">Starting APR for personal loans</div>
+                <div class="lender-stats">
+                    <div class="ls-item"><div class="ls-val">$5k–$100k</div><div class="ls-lbl">Loan Range</div></div>
+                    <div class="ls-item"><div class="ls-val">2–7 yrs</div><div class="ls-lbl">Terms</div></div>
+                    <div class="ls-item"><div class="ls-val">680+</div><div class="ls-lbl">Min. Score</div></div>
+                </div>
+                <a href="#" class="lender-apply">Check Your Rate →</a>
+            </div>
+
+            <div class="lender-card">
+                <div class="lender-header">
+                    <div><div class="lender-name">LightStream</div><div class="lender-type">Personal Loans · Auto · Home Improvement</div></div>
+                    <div class="lender-logo">⚡</div>
+                </div>
+                <div class="lender-rate">7.49%</div>
+                <div class="lender-rate-label">Starting APR (with autopay)</div>
+                <div class="lender-stats">
+                    <div class="ls-item"><div class="ls-val">$5k–$100k</div><div class="ls-lbl">Loan Range</div></div>
+                    <div class="ls-item"><div class="ls-val">2–12 yrs</div><div class="ls-lbl">Terms</div></div>
+                    <div class="ls-item"><div class="ls-val">660+</div><div class="ls-lbl">Min. Score</div></div>
+                </div>
+                <a href="#" class="lender-apply">Check Your Rate →</a>
+            </div>
+
+            <div class="lender-card">
+                <div class="lender-header">
+                    <div><div class="lender-name">Rocket Mortgage</div><div class="lender-type">Mortgages · Refinance · Home Equity</div></div>
+                    <div class="lender-logo">🚀</div>
+                </div>
+                <div class="lender-rate">6.75%</div>
+                <div class="lender-rate-label">30-year fixed rate (est.)</div>
+                <div class="lender-stats">
+                    <div class="ls-item"><div class="ls-val">$85k+</div><div class="ls-lbl">Min. Loan</div></div>
+                    <div class="ls-item"><div class="ls-val">10–30 yrs</div><div class="ls-lbl">Terms</div></div>
+                    <div class="ls-item"><div class="ls-val">620+</div><div class="ls-lbl">Min. Score</div></div>
+                </div>
+                <a href="#" class="lender-apply">Get Pre-Approved →</a>
+            </div>
+
+            <div class="lender-card">
+                <div class="lender-header">
+                    <div><div class="lender-name">Marcus by Goldman Sachs</div><div class="lender-type">Personal Loans · High-Yield Savings</div></div>
+                    <div class="lender-logo">🏛️</div>
+                </div>
+                <div class="lender-rate">6.99%</div>
+                <div class="lender-rate-label">Starting APR for personal loans</div>
+                <div class="lender-stats">
+                    <div class="ls-item"><div class="ls-val">$3.5k–$40k</div><div class="ls-lbl">Loan Range</div></div>
+                    <div class="ls-item"><div class="ls-val">3–6 yrs</div><div class="ls-lbl">Terms</div></div>
+                    <div class="ls-item"><div class="ls-val">660+</div><div class="ls-lbl">Min. Score</div></div>
+                </div>
+                <a href="#" class="lender-apply">Check Your Rate →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterCards(btn, type) {
+    document.querySelectorAll('.card-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.cc-card').forEach(c => {
+        c.style.display = (type === 'all' || c.dataset.type === type) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

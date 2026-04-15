@@ -1,0 +1,441 @@
+{% extends "_layout.html" %}
+
+{% block title %}Custom View — Kiwi Finance{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+.page-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, #faf5ff 0%, #f0fdf4 50%, #eff6ff 100%);
+    background-size: 300% 300%;
+    animation: bgShift 16s ease infinite;
+}
+@keyframes bgShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+.page-wrap { max-width: 1200px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.page-hero { margin-bottom: 36px; animation: fadeUp 0.4s ease both; }
+.page-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--purple-bg); border: 1px solid #e9d5ff;
+    color: #6b21a8; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.page-title { font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.page-sub   { font-size: 16px; color: var(--text-muted); max-width: 560px; line-height: 1.65; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Builder layout ── */
+.builder-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+
+/* ── Sidebar ── */
+.sidebar {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; position: sticky; top: 84px;
+    animation: fadeUp 0.4s ease 0.1s both;
+}
+.sidebar-header {
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 700;
+}
+.sidebar-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.sidebar-section:last-child { border-bottom: none; }
+.sidebar-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 10px; }
+
+.widget-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 9px; cursor: pointer;
+    transition: background 120ms; user-select: none;
+}
+.widget-option:hover { background: var(--bg); }
+.widget-option input[type=checkbox] { accent-color: var(--purple); width: 15px; height: 15px; cursor: pointer; }
+.widget-option-icon { font-size: 16px; }
+.widget-option-text { font-size: 13px; font-weight: 500; }
+
+.sidebar-field { margin-bottom: 10px; }
+.sidebar-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+.sidebar-field input, .sidebar-field select {
+    width: 100%; height: 34px; padding: 0 10px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text);
+    font: 13px/1 'Inter', sans-serif; outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+.sidebar-field input:focus, .sidebar-field select:focus {
+    border-color: var(--purple); box-shadow: 0 0 0 3px rgba(147,51,234,0.12);
+}
+
+.btn-build {
+    width: 100%; height: 40px; margin-top: 4px;
+    background: var(--purple); border: none; border-radius: 10px;
+    color: #fff; font: 700 13px 'Inter', sans-serif; cursor: pointer;
+    transition: background 150ms, transform 150ms, box-shadow 150ms;
+}
+.btn-build:hover { background: #7e22ce; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(147,51,234,0.3); }
+
+/* ── Canvas ── */
+.canvas { animation: fadeUp 0.4s ease 0.15s both; }
+.canvas-empty {
+    background: white; border: 2px dashed var(--border); border-radius: 16px;
+    padding: 80px 40px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.canvas-empty-icon { font-size: 48px; }
+.canvas-empty-title { font-size: 18px; font-weight: 700; }
+.canvas-empty-sub   { font-size: 14px; color: var(--text-muted); max-width: 360px; }
+
+.widgets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.widget-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; transition: box-shadow 200ms, transform 200ms;
+}
+.widget-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.widget-card.full-width { grid-column: 1 / -1; }
+
+.widget-header {
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.widget-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+.widget-meta  { font-size: 11px; color: var(--text-subtle); }
+.widget-body  { padding: 18px 20px; }
+
+/* Stat widget */
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.stat-item { text-align: center; }
+.stat-num  { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text); }
+.stat-lbl  { font-size: 11px; color: var(--text-subtle); margin-top: 3px; }
+
+/* Recent txns widget */
+.txn-list { display: flex; flex-direction: column; gap: 0; }
+.txn-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.txn-row:last-child { border-bottom: none; }
+.txn-name   { font-size: 13px; font-weight: 500; }
+.txn-date   { font-size: 11px; color: var(--text-subtle); margin-top: 1px; }
+.txn-amount { font-size: 13px; font-weight: 700; color: var(--red); }
+.txn-amount.credit { color: var(--green); }
+
+/* Account balances widget */
+.acc-list { display: flex; flex-direction: column; gap: 10px; }
+.acc-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--bg); border-radius: 10px;
+}
+.acc-name    { font-size: 13px; font-weight: 600; }
+.acc-type    { font-size: 11px; color: var(--text-subtle); margin-top: 1px; }
+.acc-balance { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+
+@media (max-width: 900px) {
+    .builder-layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .widgets-grid { grid-template-columns: 1fr; }
+    .widget-card.full-width { grid-column: auto; }
+}
+@media (max-width: 600px) { .page-wrap { padding: 32px 18px 72px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-bg"></div>
+
+<div class="page-wrap">
+    <div class="page-hero">
+        <div class="page-eyebrow">✨ Custom View Builder</div>
+        <h1 class="page-title">Build your perfect financial view.</h1>
+        <p class="page-sub">Pick the widgets you care about, set your date range, and build a personalized dashboard that shows exactly what matters to you.</p>
+    </div>
+
+    <div class="builder-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">🔧 Configure Your View</div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Date Range</div>
+                <div class="sidebar-field">
+                    <label>Start Date</label>
+                    <input type="date" id="cv-start">
+                </div>
+                <div class="sidebar-field">
+                    <label>End Date</label>
+                    <input type="date" id="cv-end">
+                </div>
+                <div class="sidebar-field">
+                    <label>Scope</label>
+                    <select id="cv-pending">
+                        <option value="false">Posted only</option>
+                        <option value="true">Include pending</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Widgets</div>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-summary" checked>
+                    <span class="widget-option-icon">📊</span>
+                    <span class="widget-option-text">Summary Stats</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-spend-day" checked>
+                    <span class="widget-option-icon">📈</span>
+                    <span class="widget-option-text">Spend by Day</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-merchants" checked>
+                    <span class="widget-option-icon">🏪</span>
+                    <span class="widget-option-text">Top Merchants</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-monthly">
+                    <span class="widget-option-icon">📅</span>
+                    <span class="widget-option-text">Monthly Trend</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-recent" checked>
+                    <span class="widget-option-icon">🧾</span>
+                    <span class="widget-option-text">Recent Transactions</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-accounts">
+                    <span class="widget-option-icon">🏦</span>
+                    <span class="widget-option-text">Account Balances</span>
+                </label>
+                <label class="widget-option">
+                    <input type="checkbox" id="w-distribution">
+                    <span class="widget-option-icon">📦</span>
+                    <span class="widget-option-text">Amount Distribution</span>
+                </label>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Options</div>
+                <div class="sidebar-field">
+                    <label>Top Merchants</label>
+                    <select id="cv-merchant-limit">
+                        <option value="5">Top 5</option>
+                        <option value="10" selected>Top 10</option>
+                        <option value="20">Top 20</option>
+                    </select>
+                </div>
+                <div class="sidebar-field">
+                    <label>Recent Transactions</label>
+                    <select id="cv-txn-limit">
+                        <option value="10">Last 10</option>
+                        <option value="25" selected>Last 25</option>
+                        <option value="50">Last 50</option>
+                    </select>
+                </div>
+                <button class="btn-build" onclick="buildView()">Build My View →</button>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas">
+            <div class="canvas-empty" id="canvas-empty">
+                <div class="canvas-empty-icon">✨</div>
+                <div class="canvas-empty-title">Your custom view will appear here</div>
+                <div class="canvas-empty-sub">Select the widgets you want on the left, set your date range, and click "Build My View".</div>
+            </div>
+            <div class="widgets-grid" id="widgets-grid" style="display:none"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fmtCur  = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const fmtFull = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+const FONT = "'Inter', sans-serif";
+const GRID_COLOR = "#f3f4f6";
+const LABEL_STYLE = { fontSize: '11px', fontFamily: FONT, colors: '#9ca3af' };
+
+async function fetchJson(url) {
+    const res = await fetch(url);
+    return res.json();
+}
+
+function buildQuery(p) {
+    const q = new URLSearchParams();
+    Object.entries(p).forEach(([k,v]) => { if (v !== '' && v != null) q.set(k, v); });
+    return q.toString();
+}
+
+function makeCard(title, icon, meta, bodyHtml, fullWidth = false) {
+    const card = document.createElement('div');
+    card.className = 'widget-card' + (fullWidth ? ' full-width' : '');
+    card.innerHTML = `
+        <div class="widget-header">
+            <div class="widget-title">${icon} ${title}</div>
+            <div class="widget-meta">${meta}</div>
+        </div>
+        <div class="widget-body">${bodyHtml}</div>
+    `;
+    return card;
+}
+
+async function buildView() {
+    const start   = document.getElementById('cv-start').value;
+    const end     = document.getElementById('cv-end').value;
+    const pending = document.getElementById('cv-pending').value;
+    const mLimit  = document.getElementById('cv-merchant-limit').value;
+    const tLimit  = document.getElementById('cv-txn-limit').value;
+
+    const shared = { start_date: start, end_date: end, include_pending: pending };
+
+    document.getElementById('canvas-empty').style.display = 'none';
+    const grid = document.getElementById('widgets-grid');
+    grid.style.display = 'grid';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-subtle);font-size:13px">Loading your view…</div>';
+
+    try {
+        const promises = {};
+        if (document.getElementById('w-summary').checked)      promises.summary    = fetchJson('/api/dashboard/summary');
+        if (document.getElementById('w-spend-day').checked)    promises.byDay      = fetchJson(`/api/dashboard/spend-by-day?${buildQuery(shared)}`);
+        if (document.getElementById('w-merchants').checked)    promises.merchants  = fetchJson(`/api/dashboard/spend-by-merchant?${buildQuery({...shared, limit: mLimit})}`);
+        if (document.getElementById('w-monthly').checked)      promises.monthly    = fetchJson(`/api/dashboard/spend-by-month?${buildQuery(shared)}`);
+        if (document.getElementById('w-recent').checked)       promises.recent     = fetchJson(`/api/dashboard/recent-transactions?limit=${tLimit}`);
+        if (document.getElementById('w-accounts').checked)     promises.accounts   = fetchJson('/api/dashboard/account-balances');
+        if (document.getElementById('w-distribution').checked) promises.dist       = fetchJson(`/api/dashboard/spend-by-amount?${buildQuery(shared)}`);
+
+        const keys = Object.keys(promises);
+        const results = await Promise.all(Object.values(promises));
+        const data = {};
+        keys.forEach((k, i) => data[k] = results[i]);
+
+        grid.innerHTML = '';
+
+        // Summary
+        if (data.summary) {
+            const s = data.summary;
+            const card = makeCard('Summary', '📊', 'Key numbers', `
+                <div class="stat-row">
+                    <div class="stat-item"><div class="stat-num">${fmtCur.format(s.total_posted_spend||0)}</div><div class="stat-lbl">Posted Spend</div></div>
+                    <div class="stat-item"><div class="stat-num">${(s.transaction_count||0).toLocaleString()}</div><div class="stat-lbl">Transactions</div></div>
+                    <div class="stat-item"><div class="stat-num">${s.account_count||0}</div><div class="stat-lbl">Accounts</div></div>
+                </div>
+            `);
+            grid.appendChild(card);
+        }
+
+        // Recent transactions
+        if (data.recent) {
+            const rows = data.recent.transactions || [];
+            const html = `<div class="txn-list">${rows.slice(0,parseInt(tLimit)).map(t => `
+                <div class="txn-row">
+                    <div><div class="txn-name">${t.merchant_name || t.name}</div><div class="txn-date">${t.date}${t.pending ? ' · Pending' : ''}</div></div>
+                    <div class="txn-amount ${t.amount < 0 ? 'credit' : ''}">${t.amount < 0 ? '+' : ''}${fmtFull.format(Math.abs(t.amount))}</div>
+                </div>`).join('')}</div>`;
+            grid.appendChild(makeCard('Recent Transactions', '🧾', `Last ${rows.length}`, html));
+        }
+
+        // Spend by day chart
+        if (data.byDay) {
+            const card = makeCard('Spend by Day', '📈', 'Daily totals', '<div id="cv-day-chart"></div>', true);
+            grid.appendChild(card);
+            await new Promise(r => setTimeout(r, 50));
+            const series = (data.byDay.points||[]).map(r => [new Date(r.date+'T12:00:00').getTime(), parseFloat(r.total_spend)]);
+            new ApexCharts(document.getElementById('cv-day-chart'), {
+                chart: { type: 'area', height: 260, toolbar: { show: false }, fontFamily: FONT, animations: { enabled: true, speed: 700 } },
+                series: [{ name: 'Spend', data: series }],
+                xaxis: { type: 'datetime', labels: { style: LABEL_STYLE, datetimeUTC: false }, axisBorder: { show: false }, axisTicks: { show: false } },
+                yaxis: { labels: { style: LABEL_STYLE, formatter: v => fmtCur.format(v) } },
+                stroke: { curve: 'smooth', width: 2, colors: ['#9333ea'] },
+                fill: { type: 'gradient', gradient: { type: 'vertical', colorStops: [[{ offset: 0, color: '#9333ea', opacity: 0.2 }, { offset: 100, color: '#9333ea', opacity: 0.01 }]] } },
+                colors: ['#9333ea'],
+                tooltip: { x: { format: 'MMM dd, yyyy' }, y: { formatter: v => fmtFull.format(v) }, theme: 'light' },
+                grid: { borderColor: GRID_COLOR, strokeDashArray: 4 },
+                dataLabels: { enabled: false },
+                markers: { size: 0 },
+            }).render();
+        }
+
+        // Merchants chart
+        if (data.merchants) {
+            const rows = data.merchants.points || [];
+            const card = makeCard('Top Merchants', '🏪', `Top ${rows.length}`, '<div id="cv-merchant-chart"></div>');
+            grid.appendChild(card);
+            await new Promise(r => setTimeout(r, 50));
+            const h = Math.max(rows.length * 44 + 40, 240);
+            new ApexCharts(document.getElementById('cv-merchant-chart'), {
+                chart: { type: 'bar', height: h, toolbar: { show: false }, fontFamily: FONT, animations: { enabled: true, speed: 700 } },
+                plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '65%', distributed: true } },
+                series: [{ name: 'Spend', data: rows.map(r => parseFloat(r.total_spend)) }],
+                xaxis: { categories: rows.map(r => r.merchant), labels: { style: LABEL_STYLE, formatter: v => fmtCur.format(v) }, axisBorder: { show: false }, axisTicks: { show: false } },
+                yaxis: { labels: { style: { fontSize: '12px', fontFamily: FONT, colors: '#374151' }, maxWidth: 150 } },
+                colors: ['#16a34a','#22c55e','#4ade80','#2563eb','#3b82f6','#9333ea','#a855f7','#f59e0b','#f97316','#dc2626'],
+                tooltip: { y: { formatter: v => fmtFull.format(v) }, theme: 'light' },
+                grid: { borderColor: GRID_COLOR, strokeDashArray: 4, yaxis: { lines: { show: false } } },
+                dataLabels: { enabled: true, formatter: v => fmtCur.format(v), style: { fontSize: '11px', fontFamily: FONT, colors: ['#fff'], fontWeight: '600' }, dropShadow: { enabled: false } },
+                legend: { show: false },
+            }).render();
+        }
+
+        // Monthly trend
+        if (data.monthly) {
+            const rows = data.monthly.points || [];
+            const card = makeCard('Monthly Trend', '📅', 'Spend per month', '<div id="cv-monthly-chart"></div>', true);
+            grid.appendChild(card);
+            await new Promise(r => setTimeout(r, 50));
+            new ApexCharts(document.getElementById('cv-monthly-chart'), {
+                chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: FONT, animations: { enabled: true, speed: 700 } },
+                plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+                series: [{ name: 'Spend', data: rows.map(r => parseFloat(r.total_spend)) }],
+                xaxis: { categories: rows.map(r => r.month), labels: { style: LABEL_STYLE }, axisBorder: { show: false }, axisTicks: { show: false } },
+                yaxis: { labels: { style: LABEL_STYLE, formatter: v => fmtCur.format(v) } },
+                colors: ['#2563eb'],
+                fill: { type: 'gradient', gradient: { type: 'vertical', colorStops: [[{ offset: 0, color: '#2563eb', opacity: 1 }, { offset: 100, color: '#60a5fa', opacity: 0.8 }]] } },
+                tooltip: { y: { formatter: v => fmtFull.format(v) }, theme: 'light' },
+                grid: { borderColor: GRID_COLOR, strokeDashArray: 4 },
+                dataLabels: { enabled: false },
+            }).render();
+        }
+
+        // Account balances
+        if (data.accounts) {
+            const accs = data.accounts.accounts || [];
+            const html = `<div class="acc-list">${accs.map(a => `
+                <div class="acc-row">
+                    <div><div class="acc-name">${a.name}</div><div class="acc-type">${a.type}${a.subtype ? ' · ' + a.subtype : ''}${a.mask ? ' ···' + a.mask : ''}</div></div>
+                    <div class="acc-balance">${fmtFull.format(a.current_balance || 0)}</div>
+                </div>`).join('')}</div>`;
+            grid.appendChild(makeCard('Account Balances', '🏦', `${accs.length} accounts`, html));
+        }
+
+        // Distribution
+        if (data.dist) {
+            const rows = data.dist.points || [];
+            const card = makeCard('Amount Distribution', '📦', 'Transaction counts', '<div id="cv-dist-chart"></div>');
+            grid.appendChild(card);
+            await new Promise(r => setTimeout(r, 50));
+            new ApexCharts(document.getElementById('cv-dist-chart'), {
+                chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: FONT, animations: { enabled: true, speed: 700 } },
+                plotOptions: { bar: { borderRadius: 5, columnWidth: '60%' } },
+                series: [{ name: 'Transactions', data: rows.map(r => r.transaction_count) }],
+                xaxis: { categories: rows.map(r => r.bucket_label), labels: { style: LABEL_STYLE, rotate: -35 }, axisBorder: { show: false }, axisTicks: { show: false } },
+                yaxis: { labels: { style: LABEL_STYLE, formatter: v => Math.round(v) } },
+                colors: ['#f59e0b'],
+                fill: { type: 'gradient', gradient: { type: 'vertical', colorStops: [[{ offset: 0, color: '#f59e0b', opacity: 1 }, { offset: 100, color: '#fbbf24', opacity: 0.8 }]] } },
+                tooltip: { y: { formatter: v => v + ' transactions' }, theme: 'light' },
+                grid: { borderColor: GRID_COLOR, strokeDashArray: 4 },
+                dataLabels: { enabled: false },
+            }).render();
+        }
+
+        if (grid.children.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-subtle);font-size:14px">No widgets selected. Check at least one widget on the left.</div>';
+        }
+
+    } catch (err) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--red);font-size:13px">Error loading data: ${err.message}</div>`;
+    }
+}
+</script>
+{% endblock %}

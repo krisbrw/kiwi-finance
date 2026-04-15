@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kiwi Finance{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap" rel="stylesheet">
+    <style>
+    /* ── Variables ──────────────────────────────────────── */
+    :root {
+        --green:        #16a34a;
+        --green-light:  #22c55e;
+        --green-hover:  #15803d;
+        --green-bg:     #f0fdf4;
+        --green-text:   #166534;
+        --green-border: #bbf7d0;
+        --text:         #111827;
+        --text-muted:   #6b7280;
+        --text-subtle:  #9ca3af;
+        --surface:      #ffffff;
+        --border:       #e5e7eb;
+        --bg:           #f9fafb;
+        --blue:         #2563eb;
+        --blue-bg:      #eff6ff;
+        --purple:       #9333ea;
+        --purple-bg:    #faf5ff;
+        --amber:        #d97706;
+        --amber-bg:     #fffbeb;
+        --red:          #dc2626;
+        --red-bg:       #fef2f2;
+        --red-text:     #991b1b;
+        --dark:         #0f172a;
+    }
+
+    /* ── Reset ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: var(--text);
+        line-height: 1.5;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+    }
+    a { color: inherit; }
+    button { font-family: inherit; }
+
+    /* ── Nav ────────────────────────────────────────────── */
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+    }
+
+    .site-nav {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 0 32px;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(229,231,235,0.8);
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+        flex-shrink: 0;
+    }
+    .nav-brand-name {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        white-space: nowrap;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+    }
+
+    .nav-item { position: relative; }
+
+    .nav-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 7px 12px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 130ms, background 130ms;
+        white-space: nowrap;
+    }
+    .nav-link-btn:hover,
+    .nav-item.is-open .nav-link-btn {
+        color: var(--text);
+        background: var(--bg);
+    }
+    .nav-chevron {
+        width: 14px; height: 14px;
+        color: var(--text-subtle);
+        transition: transform 200ms;
+        flex-shrink: 0;
+    }
+    .nav-item.is-open .nav-chevron { transform: rotate(180deg); }
+
+    /* Dropdown panel */
+    .nav-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        min-width: 260px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 6px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.13), 0 4px 14px rgba(0,0,0,0.06);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-50%) translateY(-8px);
+        transition: opacity 180ms, visibility 180ms, transform 180ms;
+    }
+    .nav-item.is-open .nav-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .nav-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text);
+        transition: background 120ms;
+    }
+    .nav-dropdown-item:hover { background: var(--bg); }
+    .nav-dd-icon {
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .nav-dd-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+    .nav-dd-title { font-size: 13px; font-weight: 600; }
+    .nav-dd-desc  { font-size: 11px; color: var(--text-subtle); margin-top: 1px; }
+
+    /* Nav right */
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .nav-social {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .nav-social a {
+        display: flex;
+        color: var(--text-subtle);
+        text-decoration: none;
+        transition: color 130ms, transform 130ms;
+    }
+    .nav-social a:hover { color: var(--text); transform: translateY(-1px); }
+    .nav-social svg { width: 17px; height: 17px; }
+
+    .nav-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        background: var(--green);
+        color: #fff;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 130ms, transform 130ms, box-shadow 130ms;
+    }
+    .nav-cta:hover {
+        background: var(--green-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(22,163,74,0.32);
+    }
+
+    /* Hamburger */
+    .nav-hamburger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 36px; height: 36px;
+        padding: 7px;
+        border: none; border-radius: 7px;
+        background: transparent;
+        cursor: pointer;
+        transition: background 130ms;
+    }
+    .nav-hamburger:hover { background: var(--bg); }
+    .nav-hamburger span {
+        display: block; height: 2px;
+        background: var(--text);
+        border-radius: 2px;
+        transition: all 200ms;
+    }
+    .nav-hamburger.is-open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .nav-hamburger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-hamburger.is-open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    /* Mobile menu */
+    .nav-mobile {
+        display: none;
+        position: fixed;
+        top: 64px; left: 0; right: 0; bottom: 0;
+        background: var(--surface);
+        overflow-y: auto;
+        padding: 20px 20px 40px;
+        border-top: 1px solid var(--border);
+        z-index: 190;
+    }
+    .nav-mobile.is-open { display: block; }
+
+    .mobile-section { margin-bottom: 24px; }
+    .mobile-section-title {
+        font-size: 10px; font-weight: 700;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--text-subtle);
+        margin-bottom: 8px; padding-left: 4px;
+    }
+    .mobile-link {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px;
+        border-radius: 9px;
+        text-decoration: none;
+        color: var(--text);
+        font-size: 14px; font-weight: 500;
+        transition: background 120ms;
+    }
+    .mobile-link:hover { background: var(--bg); }
+    .mobile-link-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .mobile-link-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+    .mobile-cta {
+        display: block; text-align: center;
+        padding: 14px; background: var(--green); color: #fff;
+        border-radius: 10px; font-size: 15px; font-weight: 600;
+        text-decoration: none; margin-top: 16px;
+        transition: background 130ms;
+    }
+    .mobile-cta:hover { background: var(--green-hover); }
+    .mobile-social {
+        display: flex; gap: 20px; justify-content: center;
+        padding: 20px 0 0;
+        border-top: 1px solid var(--border); margin-top: 20px;
+    }
+    .mobile-social a {
+        color: var(--text-muted); text-decoration: none;
+        display: flex; align-items: center;
+        transition: color 120ms;
+    }
+    .mobile-social a:hover { color: var(--text); }
+    .mobile-social svg { width: 22px; height: 22px; }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    .site-footer {
+        background: var(--dark);
+        color: #cbd5e1;
+        padding: 60px 32px 0;
+        margin-top: 80px;
+    }
+
+    .footer-inner {
+        max-width: 1200px; margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.6fr 1fr 1fr 1fr;
+        gap: 48px;
+        padding-bottom: 48px;
+    }
+
+    .footer-logo {
+        display: flex; align-items: center; gap: 10px;
+        text-decoration: none; color: #fff;
+        font-size: 16px; font-weight: 700;
+        letter-spacing: -0.02em; margin-bottom: 14px;
+    }
+    .footer-tagline {
+        font-size: 13px; color: #94a3b8;
+        line-height: 1.65; margin-bottom: 22px; max-width: 220px;
+    }
+    .footer-social {
+        display: flex; gap: 10px;
+    }
+    .footer-social a {
+        display: flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: 8px;
+        background: rgba(255,255,255,0.07);
+        color: #94a3b8; text-decoration: none;
+        transition: background 130ms, color 130ms, transform 130ms;
+    }
+    .footer-social a:hover {
+        background: rgba(22,163,74,0.25);
+        color: #4ade80;
+        transform: translateY(-2px);
+    }
+    .footer-social svg { width: 16px; height: 16px; }
+
+    .footer-col h4 {
+        font-size: 11px; font-weight: 700;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: #e2e8f0; margin-bottom: 16px;
+    }
+    .footer-col a {
+        display: block; color: #94a3b8;
+        text-decoration: none; font-size: 13px;
+        padding: 4px 0;
+        transition: color 120ms, padding-left 120ms;
+    }
+    .footer-col a:hover { color: #e2e8f0; padding-left: 4px; }
+    .app-store-link {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+    }
+    .app-store-link svg {
+        flex-shrink: 0;
+    }
+
+    .footer-bottom {
+        max-width: 1200px; margin: 0 auto;
+        border-top: 1px solid rgba(255,255,255,0.07);
+        padding: 20px 0;
+        display: flex; align-items: center;
+        justify-content: space-between; gap: 16px;
+    }
+    .footer-bottom p { font-size: 12px; color: #475569; }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a {
+        font-size: 12px; color: #475569;
+        text-decoration: none; transition: color 120ms;
+    }
+    .footer-bottom-links a:hover { color: #94a3b8; }
+
+    /* ── Shared utility ──────────────────────────────────── */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 6px; padding: 8px 16px;
+        border-radius: 8px; font-size: 13px; font-weight: 500;
+        font-family: inherit; cursor: pointer;
+        text-decoration: none; border: 1px solid transparent;
+        position: relative; overflow: hidden;
+        transition: background 120ms, border-color 120ms, color 120ms, transform 120ms, box-shadow 120ms;
+    }
+    .btn:active { transform: scale(0.97) !important; }
+    .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+    .btn-primary:hover { background: var(--green-hover); border-color: var(--green-hover); box-shadow: 0 4px 14px rgba(22,163,74,0.3); }
+    .btn-default { background: var(--surface); color: var(--text); border-color: var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .btn-default:hover { border-color: #9ca3af; background: var(--bg); }
+    .btn-subtle  { background: transparent; color: var(--text-muted); border-color: var(--border); }
+    .btn-subtle:hover { color: var(--text); border-color: #9ca3af; }
+
+    /* Ripple */
+    .btn .ripple {
+        position: absolute; border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+        width: 1px; height: 1px;
+        transform: scale(0);
+        animation: rippleAnim 0.55s ease-out forwards;
+        pointer-events: none;
+    }
+    .btn-default .ripple, .btn-subtle .ripple { background: rgba(0,0,0,0.05); }
+    @keyframes rippleAnim { to { transform: scale(280); opacity: 0; } }
+
+    /* Animations */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 960px) {
+        .nav-links  { display: none; }
+        .nav-social { display: none; }
+        .nav-cta    { display: none; }
+        .nav-hamburger { display: flex; }
+        .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+    }
+    @media (max-width: 600px) {
+        .site-nav  { padding: 0 18px; }
+        .site-footer { padding: 40px 18px 0; }
+        .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+        .footer-bottom { flex-direction: column; text-align: center; gap: 10px; }
+    }
+
+    /* ── Login Modal ─────────────────────────────────────── */
+    .login-modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px); z-index: 1000;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; visibility: hidden; transition: opacity 200ms, visibility 200ms;
+    }
+    .login-modal-overlay.is-open { opacity: 1; visibility: visible; }
+    .login-modal {
+        background: white; border-radius: 20px; padding: 40px;
+        width: 100%; max-width: 420px; margin: 20px;
+        transform: translateY(20px) scale(0.97);
+        transition: transform 200ms;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+    }
+    .login-modal-overlay.is-open .login-modal { transform: translateY(0) scale(1); }
+    .login-modal-close {
+        position: absolute; top: 16px; right: 16px;
+        width: 32px; height: 32px; border: none; background: transparent;
+        cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        color: var(--text-subtle); transition: background 150ms, color 150ms;
+    }
+    .login-modal-close:hover { background: var(--bg); color: var(--text); }
+    .login-modal-header { text-align: center; margin-bottom: 32px; }
+    .login-modal-icon {
+        width: 64px; height: 64px; border-radius: 16px;
+        background: var(--green-bg); border: 2px solid var(--green-border);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px; color: var(--green);
+    }
+    .login-modal-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .login-modal-sub { font-size: 14px; color: var(--text-muted); }
+    .login-form .form-field { margin-bottom: 16px; }
+    .login-form label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .login-form input {
+        width: 100%; height: 44px; padding: 0 14px;
+        border: 1px solid var(--border); border-radius: 10px;
+        background: var(--bg); color: var(--text);
+        font: 14px/1 'Inter', sans-serif; outline: none;
+        transition: border-color 150ms, box-shadow 150ms;
+    }
+    .login-form input:focus {
+        border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+    }
+    .login-form-actions { display: flex; gap: 10px; margin-top: 24px; }
+    .btn-login {
+        flex: 1; height: 44px; background: var(--green); border: none; border-radius: 10px;
+        color: white; font: 600 14px 'Inter', sans-serif; cursor: pointer;
+        transition: background 150ms, transform 150ms;
+    }
+    .btn-login:hover { background: var(--green-hover); transform: translateY(-1px); }
+    .login-divider {
+        display: flex; align-items: center; gap: 12px; margin: 24px 0;
+        font-size: 12px; color: var(--text-subtle);
+    }
+    .login-divider::before, .login-divider::after {
+        content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .login-alt { text-align: center; font-size: 13px; color: var(--text-muted); }
+    .login-alt a { color: var(--green); text-decoration: none; font-weight: 600; }
+    .login-alt a:hover { text-decoration: underline; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── SVG Symbol Defs ── -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <symbol id="kiwi-fruit" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="38" fill="#7B5B28"/>
+      <circle cx="40" cy="40" r="31" fill="#5A9C28"/>
+      <circle cx="40" cy="40" r="28" fill="#7AC83A"/>
+      <g fill="#1A0E05">
+        <ellipse cx="40" cy="24" rx="2.2" ry="5.5"  transform="rotate(0   40 40)"/>
+        <ellipse cx="40" cy="25" rx="2.0" ry="4.2"  transform="rotate(30  40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.1" ry="5.0"  transform="rotate(60  40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.2" ry="5.5"  transform="rotate(90  40 40)"/>
+        <ellipse cx="40" cy="25" rx="2.0" ry="4.2"  transform="rotate(120 40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.1" ry="5.0"  transform="rotate(150 40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.2" ry="5.5"  transform="rotate(180 40 40)"/>
+        <ellipse cx="40" cy="25" rx="2.0" ry="4.2"  transform="rotate(210 40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.1" ry="5.0"  transform="rotate(240 40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.2" ry="5.5"  transform="rotate(270 40 40)"/>
+        <ellipse cx="40" cy="25" rx="2.0" ry="4.2"  transform="rotate(300 40 40)"/>
+        <ellipse cx="40" cy="24" rx="2.1" ry="5.0"  transform="rotate(330 40 40)"/>
+      </g>
+      <circle cx="40" cy="40" r="8.5" fill="#F7FFF0"/>
+      <circle cx="40" cy="40" r="4"   fill="#E4F5C8"/>
+    </symbol>
+    <symbol id="icon-discord"   viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.045.035.057a19.886 19.886 0 0 0 5.993 3.03.077.077 0 0 0 .084-.028c.461-.63.874-1.295 1.226-1.994a.077.077 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></symbol>
+    <symbol id="icon-instagram" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></symbol>
+    <symbol id="icon-tiktok"    viewBox="0 0 24 24"><path fill="currentColor" d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.27 8.27 0 004.84 1.55V6.79a4.85 4.85 0 01-1.07-.1z"/></symbol>
+    <symbol id="icon-github"    viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+    <!-- Chart/Analytics icon -->
+    <symbol id="icon-chart" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
+    </symbol>
+    <!-- Target/Budget icon -->
+    <symbol id="icon-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    </symbol>
+    <!-- Custom/View icon -->
+    <symbol id="icon-view" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+    </symbol>
+    <!-- Education/Book icon -->
+    <symbol id="icon-book" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/>
+    </symbol>
+    <!-- Credit Card icon -->
+    <symbol id="icon-credit-card" viewBox="0 0 24 24">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Link/Connection icon -->
+    <symbol id="icon-link" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </symbol>
+    <!-- Cloud icon -->
+    <symbol id="icon-cloud" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    </symbol>
+    <!-- Bank/Building icon -->
+    <symbol id="icon-bank" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+    </symbol>
+    <!-- Document/Report icon -->
+    <symbol id="icon-document" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+    </symbol>
+    <!-- Wallet/Money icon -->
+    <symbol id="icon-wallet" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ── Navigation ── -->
+<header class="site-header">
+  <nav class="site-nav">
+    <a class="nav-brand" href="/">
+      <svg width="28" height="28"><use href="#kiwi-fruit"/></svg>
+      <span class="nav-brand-name">Kiwi Finance</span>
+    </a>
+
+    <div class="nav-links">
+      <!-- Tools dropdown -->
+      <div class="nav-item" data-dropdown>
+        <button class="nav-link-btn">
+          Tools
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="nav-dropdown">
+          <a class="nav-dropdown-item" href="/dashboard">
+            <div class="nav-dd-icon" style="background:var(--green-bg);color:var(--green)"><svg><use href="#icon-chart"/></svg></div>
+            <div><div class="nav-dd-title">Dashboard</div><div class="nav-dd-desc">Spending charts &amp; analytics</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="/budget">
+            <div class="nav-dd-icon" style="background:var(--blue-bg);color:var(--blue)"><svg><use href="#icon-wallet"/></svg></div>
+            <div><div class="nav-dd-title">Budget Tracker</div><div class="nav-dd-desc">Set and track monthly budgets</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="/view">
+            <div class="nav-dd-icon" style="background:var(--purple-bg);color:var(--purple)"><svg><use href="#icon-view"/></svg></div>
+            <div><div class="nav-dd-title">Custom View</div><div class="nav-dd-desc">Personalized financial overview</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Resources dropdown -->
+      <div class="nav-item" data-dropdown>
+        <button class="nav-link-btn">
+          Resources
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="nav-dropdown" style="min-width:280px">
+          <a class="nav-dropdown-item" href="/education">
+            <div class="nav-dd-icon" style="background:var(--green-bg);color:var(--green)"><svg><use href="#icon-book"/></svg></div>
+            <div><div class="nav-dd-title">Financial Education</div><div class="nav-dd-desc">Investing, debt, savings &amp; more</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="/credit#cards">
+            <div class="nav-dd-icon" style="background:var(--blue-bg);color:var(--blue)"><svg><use href="#icon-credit-card"/></svg></div>
+            <div><div class="nav-dd-title">Compare Credit Cards</div><div class="nav-dd-desc">Find the best card for you</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="/credit#lenders">
+            <div class="nav-dd-icon" style="background:var(--amber-bg);color:var(--amber)"><svg><use href="#icon-bank"/></svg></div>
+            <div><div class="nav-dd-title">Find a Lender</div><div class="nav-dd-desc">Compare mortgage &amp; loan rates</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="/credit#report">
+            <div class="nav-dd-icon" style="background:var(--purple-bg);color:var(--purple)"><svg><use href="#icon-document"/></svg></div>
+            <div><div class="nav-dd-title">Free Credit Report</div><div class="nav-dd-desc">Check your score at no cost</div></div>
+          </a>
+        </div>
+      </div>
+
+      <a class="nav-link-btn" href="/about">About</a>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-social">
+        <a href="#" title="Discord"   rel="noopener"><svg><use href="#icon-discord"/></svg></a>
+        <a href="#" title="Instagram" rel="noopener"><svg><use href="#icon-instagram"/></svg></a>
+        <a href="#" title="TikTok"    rel="noopener"><svg><use href="#icon-tiktok"/></svg></a>
+        <a href="#" title="GitHub"    rel="noopener"><svg><use href="#icon-github"/></svg></a>
+      </div>
+      <a class="nav-link-btn" href="#" onclick="openLoginModal(event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Log In
+      </a>
+      <a class="nav-cta" href="/">+ Connect Bank</a>
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="nav-mobile" id="nav-mobile">
+    <div class="mobile-section">
+      <div class="mobile-section-title">Tools</div>
+      <a class="mobile-link" href="/dashboard"><div class="mobile-link-icon" style="background:var(--green-bg);color:var(--green)"><svg><use href="#icon-chart"/></svg></div>Dashboard</a>
+      <a class="mobile-link" href="/budget"><div class="mobile-link-icon" style="background:var(--blue-bg);color:var(--blue)"><svg><use href="#icon-wallet"/></svg></div>Budget Tracker</a>
+      <a class="mobile-link" href="/view"><div class="mobile-link-icon" style="background:var(--purple-bg);color:var(--purple)"><svg><use href="#icon-view"/></svg></div>Custom View</a>
+    </div>
+    <div class="mobile-section">
+      <div class="mobile-section-title">Resources</div>
+      <a class="mobile-link" href="/education"><div class="mobile-link-icon" style="background:var(--green-bg);color:var(--green)"><svg><use href="#icon-book"/></svg></div>Financial Education</a>
+      <a class="mobile-link" href="/credit#cards"><div class="mobile-link-icon" style="background:var(--blue-bg);color:var(--blue)"><svg><use href="#icon-credit-card"/></svg></div>Compare Credit Cards</a>
+      <a class="mobile-link" href="/credit#lenders"><div class="mobile-link-icon" style="background:var(--amber-bg);color:var(--amber)"><svg><use href="#icon-bank"/></svg></div>Find a Lender</a>
+      <a class="mobile-link" href="/credit#report"><div class="mobile-link-icon" style="background:var(--purple-bg);color:var(--purple)"><svg><use href="#icon-document"/></svg></div>Free Credit Report</a>
+    </div>
+    <div class="mobile-section">
+      <a class="mobile-link" href="/about">About Kiwi Finance</a>
+    </div>
+    <a class="mobile-cta" href="/">+ Connect Your Bank</a>
+    <div class="mobile-social">
+      <a href="#" title="Discord"><svg width="22" height="22"><use href="#icon-discord"/></svg></a>
+      <a href="#" title="Instagram"><svg width="22" height="22"><use href="#icon-instagram"/></svg></a>
+      <a href="#" title="TikTok"><svg width="22" height="22"><use href="#icon-tiktok"/></svg></a>
+      <a href="#" title="GitHub"><svg width="22" height="22"><use href="#icon-github"/></svg></a>
+    </div>
+    <a class="mobile-link" href="#" onclick="openLoginModal(event)" style="margin-top:12px;justify-content:center;font-weight:600">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Log In
+    </a>
+  </div>
+</header>
+
+{% block content %}{% endblock %}
+
+<!-- ── Login Modal ── -->
+<div class="login-modal-overlay" id="login-modal-overlay">
+    <div class="login-modal" style="position:relative">
+        <button class="login-modal-close" onclick="closeLoginModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="login-modal-header">
+            <div class="login-modal-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="login-modal-title">Welcome back</div>
+            <div class="login-modal-sub">Log in to access your financial dashboard</div>
+        </div>
+        <form class="login-form" onsubmit="handleLogin(event)">
+            <div class="form-field">
+                <label>Email</label>
+                <input type="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-field">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••" required>
+            </div>
+            <div class="login-form-actions">
+                <button type="submit" class="btn-login">Log In →</button>
+            </div>
+        </form>
+        <div class="login-divider">or</div>
+        <div class="login-alt">Don't have an account? <a href="/">Sign up free</a></div>
+    </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <a class="footer-logo" href="/"><svg width="26" height="26"><use href="#kiwi-fruit"/></svg>Kiwi Finance</a>
+      <p class="footer-tagline">Your finances, deeper than ever. Automated pipelines, beautiful insights, total transparency.</p>
+      <div class="footer-social">
+        <a href="#" title="Discord"><svg><use href="#icon-discord"/></svg></a>
+        <a href="#" title="Instagram"><svg><use href="#icon-instagram"/></svg></a>
+        <a href="#" title="TikTok"><svg><use href="#icon-tiktok"/></svg></a>
+        <a href="#" title="GitHub"><svg><use href="#icon-github"/></svg></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="/about">About Us</a>
+      <a href="/about#vision">Our Vision</a>
+      <a href="/about#contact">Get in Contact</a>
+      <a href="/about#careers">Apply for Jobs</a>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="/about#product">Understand Our Product</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/budget">Budget Tracker</a>
+      <a href="/view">Custom View</a>
+      <a href="#" onclick="requestDataExport(event)">Get My Data Records</a>
+    </div>
+    <div class="footer-col">
+      <h4>Download App</h4>
+      <a href="#" class="app-store-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        App Store
+      </a>
+      <a href="#" class="app-store-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-17c0-.59.34-1.11.84-1.35L13.69 12l-9.85 9.85c-.5-.24-.84-.76-.84-1.35m13.81-5.38L6.05 21.34l8.49-8.49 2.27 2.27m2.49-1.41c.48-.26.77-.76.77-1.31 0-.55-.29-1.05-.77-1.31L17.81 9.5l-2.27 2.27 2.27 2.27 1.49-.83M6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66z"/></svg>
+        Google Play
+      </a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Kiwi Finance. All rights reserved. <span style="color:var(--text-subtle);margin-left:8px">v1.0.0</span></p>
+    <div class="footer-bottom-links">
+      <a href="/about#privacy">Privacy Policy</a>
+      <a href="/about#terms">Terms of Service</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Dropdown toggle
+  document.querySelectorAll('[data-dropdown]').forEach(item => {
+    const btn = item.querySelector('.nav-link-btn');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = item.classList.contains('is-open');
+      document.querySelectorAll('[data-dropdown].is-open').forEach(d => d.classList.remove('is-open'));
+      if (!open) item.classList.add('is-open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('[data-dropdown].is-open').forEach(d => d.classList.remove('is-open'));
+  });
+
+  // Hamburger
+  const burger = document.getElementById('nav-hamburger');
+  const mobileMenu = document.getElementById('nav-mobile');
+  burger.addEventListener('click', () => {
+    burger.classList.toggle('is-open');
+    mobileMenu.classList.toggle('is-open');
+    document.body.style.overflow = mobileMenu.classList.contains('is-open') ? 'hidden' : '';
+  });
+
+  // Ripple on .btn elements
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.btn');
+    if (!btn || btn.tagName === 'A') return;
+    const r = btn.getBoundingClientRect();
+    const rip = document.createElement('div');
+    rip.className = 'ripple';
+    rip.style.cssText = `left:${e.clientX - r.left}px;top:${e.clientY - r.top}px`;
+    btn.appendChild(rip);
+    rip.addEventListener('animationend', () => rip.remove());
+  });
+
+  // Login modal
+  function openLoginModal(e) {
+    e.preventDefault();
+    document.getElementById('login-modal-overlay').classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLoginModal() {
+    document.getElementById('login-modal-overlay').classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+  function handleLogin(e) {
+    e.preventDefault();
+    alert('Login functionality coming soon! This is a demo.');
+    closeLoginModal();
+  }
+  document.getElementById('login-modal-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLoginModal();
+  });
+
+  // Data export request
+  function requestDataExport(e) {
+    e.preventDefault();
+    alert('Data export request submitted! You will receive a download link with all your financial records within 24 hours.');
+  }
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

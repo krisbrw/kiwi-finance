@@ -1,0 +1,461 @@
+{% extends "_layout.html" %}
+
+{% block title %}Budget Tracker — Kiwi Finance{% endblock %}
+
+{% block head %}
+<style>
+:root {
+    --blue: #2563eb; --blue-bg: #eff6ff; --blue-border: #bfdbfe; --blue-text: #1e40af;
+    --amber: #d97706; --amber-bg: #fffbeb; --amber-border: #fde68a;
+    --red: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca; --red-text: #991b1b;
+}
+
+.page-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 50%, #faf5ff 100%);
+    background-size: 300% 300%;
+    animation: bgShift 16s ease infinite;
+}
+@keyframes bgShift {
+    0%,100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+.page-wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.page-hero { margin-bottom: 40px; animation: fadeUp 0.4s ease both; }
+.page-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--blue-bg); border: 1px solid var(--blue-border);
+    color: var(--blue-text); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.page-title {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+    letter-spacing: -0.03em; color: var(--text); margin-bottom: 10px;
+}
+.page-sub { font-size: 16px; color: var(--text-muted); max-width: 560px; line-height: 1.65; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Summary bar ── */
+.budget-summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 28px;
+}
+.bsum-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px;
+    animation: fadeUp 0.4s ease both;
+    transition: box-shadow 200ms, transform 200ms;
+}
+.bsum-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.07); transform: translateY(-2px); }
+.bsum-card:nth-child(1) { animation-delay: 0.05s; }
+.bsum-card:nth-child(2) { animation-delay: 0.10s; }
+.bsum-card:nth-child(3) { animation-delay: 0.15s; }
+.bsum-card:nth-child(4) { animation-delay: 0.20s; }
+.bsum-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 8px; }
+.bsum-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
+.bsum-sub   { font-size: 12px; color: var(--text-subtle); }
+.bsum-value.green  { color: var(--green); }
+.bsum-value.red    { color: var(--red); }
+.bsum-value.amber  { color: var(--amber); }
+
+/* ── Month selector ── */
+.month-bar {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 22px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    animation: fadeUp 0.4s ease 0.22s both;
+}
+.month-bar label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.month-bar input[type=month] {
+    height: 34px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text);
+    font: 13px/1 'Inter', sans-serif; outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+.month-bar input[type=month]:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+.month-bar .btn-apply {
+    height: 34px; padding: 0 18px;
+    background: var(--blue); border: none; border-radius: 8px;
+    color: #fff; font: 600 13px 'Inter', sans-serif; cursor: pointer;
+    transition: background 150ms, transform 150ms;
+}
+.month-bar .btn-apply:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+/* ── Budget grid ── */
+.budget-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    animation: fadeUp 0.4s ease 0.28s both;
+}
+
+.budget-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 200ms, transform 200ms;
+}
+.budget-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+.bc-header {
+    padding: 18px 22px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+}
+.bc-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.bc-icon  { font-size: 18px; }
+.bc-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 100px;
+}
+.bc-badge.ok     { background: var(--green-bg); color: var(--green-text); }
+.bc-badge.warn   { background: var(--amber-bg); color: var(--amber); }
+.bc-badge.over   { background: var(--red-bg);   color: var(--red-text); }
+
+.bc-body { padding: 18px 22px; }
+
+.bc-amounts {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+}
+.bc-spent { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+.bc-limit { font-size: 13px; color: var(--text-muted); }
+
+.progress-track {
+    height: 8px; background: var(--bg); border-radius: 100px; overflow: hidden;
+    margin-bottom: 10px;
+}
+.progress-fill {
+    height: 100%; border-radius: 100px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.progress-fill.ok   { background: linear-gradient(90deg, var(--green), var(--green-light)); }
+.progress-fill.warn { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+.progress-fill.over { background: linear-gradient(90deg, var(--red), #f87171); }
+
+.bc-meta { font-size: 12px; color: var(--text-subtle); }
+
+/* ── Add budget form ── */
+.add-budget-card {
+    background: white; border: 2px dashed var(--border); border-radius: 16px;
+    padding: 32px; text-align: center;
+    cursor: pointer; transition: border-color 200ms, background 200ms;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 180px;
+}
+.add-budget-card:hover { border-color: var(--blue); background: var(--blue-bg); }
+.add-icon { font-size: 32px; margin-bottom: 10px; }
+.add-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.add-sub   { font-size: 12px; color: var(--text-muted); }
+
+/* ── Modal ── */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px); z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transition: opacity 200ms, visibility 200ms;
+}
+.modal-overlay.is-open { opacity: 1; visibility: visible; }
+.modal {
+    background: white; border-radius: 20px; padding: 32px;
+    width: 100%; max-width: 440px; margin: 20px;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 200ms;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+}
+.modal-overlay.is-open .modal { transform: translateY(0) scale(1); }
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+.modal-sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.form-field  { margin-bottom: 16px; }
+.form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+.form-field input, .form-field select {
+    width: 100%; height: 40px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--bg); color: var(--text);
+    font: 14px/1 'Inter', sans-serif; outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+.form-field input:focus, .form-field select:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+.btn-modal-save {
+    flex: 1; height: 42px; background: var(--blue); border: none; border-radius: 10px;
+    color: #fff; font: 600 14px 'Inter', sans-serif; cursor: pointer;
+    transition: background 150ms, transform 150ms;
+}
+.btn-modal-save:hover { background: #1d4ed8; transform: translateY(-1px); }
+.btn-modal-cancel {
+    height: 42px; padding: 0 20px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-muted); font: 500 14px 'Inter', sans-serif;
+    cursor: pointer; transition: background 150ms;
+}
+.btn-modal-cancel:hover { background: var(--border); }
+
+/* ── Tips section ── */
+.tips-section { margin-top: 40px; animation: fadeUp 0.4s ease 0.35s both; }
+.tips-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
+.tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.tip-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; transition: box-shadow 200ms, transform 200ms;
+}
+.tip-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-2px); }
+.tip-icon  { font-size: 24px; margin-bottom: 10px; }
+.tip-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.tip-body  { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+
+@media (max-width: 900px) {
+    .budget-summary { grid-template-columns: repeat(2, 1fr); }
+    .budget-grid    { grid-template-columns: 1fr; }
+    .tips-grid      { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+    .page-wrap { padding: 32px 18px 72px; }
+    .budget-summary { grid-template-columns: 1fr 1fr; }
+    .tips-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-bg"></div>
+
+<div class="page-wrap">
+    <div class="page-hero">
+        <div class="page-eyebrow">🎯 Live Budget Tracker</div>
+        <h1 class="page-title">Your money, your rules.</h1>
+        <p class="page-sub">Set monthly spending targets by category or merchant. Watch your live spending stack up against your goals in real time — no surprises.</p>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="budget-summary">
+        <div class="bsum-card">
+            <div class="bsum-label">Total Budgeted</div>
+            <div class="bsum-value" id="total-budgeted">$0</div>
+            <div class="bsum-sub">This month</div>
+        </div>
+        <div class="bsum-card">
+            <div class="bsum-label">Total Spent</div>
+            <div class="bsum-value" id="total-spent">$0</div>
+            <div class="bsum-sub">Posted transactions</div>
+        </div>
+        <div class="bsum-card">
+            <div class="bsum-label">Remaining</div>
+            <div class="bsum-value green" id="total-remaining">$0</div>
+            <div class="bsum-sub">Across all categories</div>
+        </div>
+        <div class="bsum-card">
+            <div class="bsum-label">Categories Over</div>
+            <div class="bsum-value red" id="over-count">0</div>
+            <div class="bsum-sub">Exceeded budget</div>
+        </div>
+    </div>
+
+    <!-- Month selector -->
+    <div class="month-bar">
+        <label for="budget-month">Viewing month:</label>
+        <input type="month" id="budget-month">
+        <button class="btn-apply" id="refresh-btn">Refresh</button>
+    </div>
+
+    <!-- Budget cards grid -->
+    <div class="budget-grid" id="budget-grid">
+        <!-- Populated by JS -->
+        <div class="add-budget-card" id="add-budget-btn" onclick="openModal()">
+            <div class="add-icon">➕</div>
+            <div class="add-title">Add a Budget Category</div>
+            <div class="add-sub">Set a monthly spending limit for any category or merchant</div>
+        </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="tips-section">
+        <div class="tips-title">Budget smarter</div>
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">📐</div>
+                <div class="tip-title">The 50/30/20 Rule</div>
+                <div class="tip-body">Allocate 50% of income to needs, 30% to wants, and 20% to savings and debt repayment. A simple framework that works for most people.</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">🔔</div>
+                <div class="tip-title">Set Stretch Targets</div>
+                <div class="tip-body">Try setting your budget 10–15% below what you actually spend. The slight pressure helps you notice and cut small recurring expenses.</div>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">📅</div>
+                <div class="tip-title">Review Weekly</div>
+                <div class="tip-body">A 5-minute weekly check-in is more effective than a monthly review. Catching overspend early gives you time to adjust before the month ends.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Budget Modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-title">Add Budget Category</div>
+        <div class="modal-sub">Set a monthly spending limit. Your live transactions will be compared against it automatically.</div>
+        <div class="form-field">
+            <label>Category Name</label>
+            <input type="text" id="modal-category" placeholder="e.g. Groceries, Dining, Netflix…">
+        </div>
+        <div class="form-field">
+            <label>Monthly Limit ($)</label>
+            <input type="number" id="modal-limit" placeholder="e.g. 400" min="1">
+        </div>
+        <div class="form-field">
+            <label>Icon (emoji)</label>
+            <input type="text" id="modal-icon" placeholder="🛒" maxlength="4">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-modal-save" onclick="saveBudget()">Save Budget</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const STORAGE_KEY = 'kiwi_budgets_v1';
+const fmtCur = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+// ── State ──
+let budgets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let merchantSpend = {};
+
+// ── Month init ──
+const monthInput = document.getElementById('budget-month');
+const now = new Date();
+monthInput.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+// ── Fetch live spend ──
+async function fetchSpend(month) {
+    const [year, mon] = month.split('-');
+    const start = `${year}-${mon}-01`;
+    const lastDay = new Date(year, mon, 0).getDate();
+    const end = `${year}-${mon}-${lastDay}`;
+    try {
+        const res = await fetch(`/api/dashboard/spend-by-merchant?start_date=${start}&end_date=${end}&include_pending=false`);
+        const data = await res.json();
+        const map = {};
+        (data.points || []).forEach(r => { map[r.merchant.toLowerCase()] = parseFloat(r.total_spend); });
+        return map;
+    } catch { return {}; }
+}
+
+// ── Render ──
+function getStatus(pct) {
+    if (pct >= 100) return 'over';
+    if (pct >= 80)  return 'warn';
+    return 'ok';
+}
+function getStatusLabel(pct) {
+    if (pct >= 100) return 'Over budget';
+    if (pct >= 80)  return 'Almost there';
+    return 'On track';
+}
+
+function renderBudgets() {
+    const grid = document.getElementById('budget-grid');
+    // Remove existing cards (keep add button)
+    grid.querySelectorAll('.budget-card').forEach(c => c.remove());
+
+    let totalBudgeted = 0, totalSpent = 0, overCount = 0;
+
+    budgets.forEach((b, i) => {
+        const spent = merchantSpend[b.category.toLowerCase()] || 0;
+        const pct   = b.limit > 0 ? Math.min((spent / b.limit) * 100, 110) : 0;
+        const status = getStatus(pct);
+        totalBudgeted += b.limit;
+        totalSpent    += spent;
+        if (pct >= 100) overCount++;
+
+        const card = document.createElement('div');
+        card.className = 'budget-card';
+        card.innerHTML = `
+            <div class="bc-header">
+                <div class="bc-title"><span class="bc-icon">${b.icon || '💰'}</span>${b.category}</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span class="bc-badge ${status}">${getStatusLabel(pct)}</span>
+                    <button onclick="removeBudget(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-subtle);font-size:16px;line-height:1;padding:2px 4px;border-radius:4px;transition:color 120ms" title="Remove">×</button>
+                </div>
+            </div>
+            <div class="bc-body">
+                <div class="bc-amounts">
+                    <span class="bc-spent">${fmtCur.format(spent)}</span>
+                    <span class="bc-limit">of ${fmtCur.format(b.limit)}</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill ${status}" style="width:${Math.min(pct,100)}%"></div>
+                </div>
+                <div class="bc-meta">${Math.round(pct)}% used · ${fmtCur.format(Math.max(b.limit - spent, 0))} remaining</div>
+            </div>
+        `;
+        grid.insertBefore(card, document.getElementById('add-budget-btn'));
+    });
+
+    document.getElementById('total-budgeted').textContent  = fmtCur.format(totalBudgeted);
+    document.getElementById('total-spent').textContent     = fmtCur.format(totalSpent);
+    const remaining = totalBudgeted - totalSpent;
+    const remEl = document.getElementById('total-remaining');
+    remEl.textContent = fmtCur.format(Math.abs(remaining));
+    remEl.className = 'bsum-value ' + (remaining < 0 ? 'red' : 'green');
+    document.getElementById('over-count').textContent = overCount;
+}
+
+async function refresh() {
+    merchantSpend = await fetchSpend(monthInput.value);
+    renderBudgets();
+}
+
+// ── Modal ──
+function openModal()  { document.getElementById('modal-overlay').classList.add('is-open'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('is-open'); }
+
+function saveBudget() {
+    const cat   = document.getElementById('modal-category').value.trim();
+    const limit = parseFloat(document.getElementById('modal-limit').value);
+    const icon  = document.getElementById('modal-icon').value.trim() || '💰';
+    if (!cat || !limit || limit <= 0) { alert('Please enter a category name and a valid limit.'); return; }
+    budgets.push({ category: cat, limit, icon });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
+    closeModal();
+    document.getElementById('modal-category').value = '';
+    document.getElementById('modal-limit').value    = '';
+    document.getElementById('modal-icon').value     = '';
+    refresh();
+}
+
+function removeBudget(i) {
+    budgets.splice(i, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
+    refresh();
+}
+
+document.getElementById('refresh-btn').addEventListener('click', refresh);
+document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+});
+
+// ── Boot ──
+if (budgets.length === 0) {
+    budgets = [
+        { category: 'Groceries',  limit: 500,  icon: '🛒' },
+        { category: 'Dining Out', limit: 300,  icon: '🍽️' },
+        { category: 'Transport',  limit: 200,  icon: '🚗' },
+        { category: 'Subscriptions', limit: 100, icon: '📱' },
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
+}
+refresh();
+</script>
+{% endblock %}

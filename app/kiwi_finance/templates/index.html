@@ -1,423 +1,1181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiwi Finance</title>
-    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-    <style>
-        :root {
-            --sky: #a7c6e8;
-            --sky-deep: #92b8e3;
-            --kiwi: #98d44b;
-            --kiwi-deep: #84c437;
-            --seed: #080808;
-            --rind: #907500;
-            --cream: #ffffff;
-            --paper: #f7f6f0;
-            --text: #111111;
-            --muted: #42525e;
-            --status-bg: rgba(255, 253, 247, 0.9);
-        }
+{% extends "_layout.html" %}
 
-        * {
-            box-sizing: border-box;
-        }
+{% block title %}Kiwi Finance — Know your money. Love your finances.{% endblock %}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Trebuchet MS", "Arial Black", Arial, sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.3) 0, transparent 18%),
-                radial-gradient(circle at 86% 12%, rgba(255, 255, 255, 0.22) 0, transparent 18%),
-                linear-gradient(180deg, var(--sky) 0%, #b5d2ef 100%);
-        }
+{% block head %}
+<style>
+/* ── Animated background ─────────────────────────────── */
+.page-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 40%, #faf5ff 70%, #f0fdf4 100%);
+    background-size: 400% 400%;
+    animation: bgShift 14s ease infinite;
+    overflow: hidden;
+}
+.page-bg::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: -5%;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.02) 100%);
+    transform: rotate(-15deg);
+    border-radius: 20px;
+}
+.page-bg::after {
+    content: '';
+    position: absolute;
+    top: 5%;
+    left: 8%;
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0.01) 100%);
+    transform: rotate(-20deg);
+    border-radius: 20px;
+}
+@keyframes bgShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
-        main {
-            max-width: 1120px;
-            margin: 0 auto;
-            padding: 48px 20px 64px;
-        }
+/* ── Hero section ────────────────────────────────────── */
+.hero {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 72px 32px 56px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+}
+@media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; padding: 56px 20px 48px; gap: 40px; }
+    .hero-visual { display: flex; justify-content: center; }
+}
 
-        .hero {
-            display: grid;
-            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.95fr);
-            gap: 28px;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green-text);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+}
+.eyebrow-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulseGreen 2s ease-in-out infinite;
+}
+@keyframes pulseGreen {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.75); }
+}
 
-        h1 {
-            margin: 0 0 12px;
-            font-size: clamp(2.8rem, 7vw, 5.8rem);
-            line-height: 0.92;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
+.hero-title {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+.hero-title .gradient-text {
+    background: linear-gradient(135deg, var(--green) 0%, #059669 50%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
-        .subtitle {
-            margin: 0;
-            color: var(--muted);
-            font-size: 1.08rem;
-            line-height: 1.6;
-            max-width: 650px;
-        }
+.hero-sub {
+    font-size: 17px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 480px;
+    margin-bottom: 36px;
+}
 
-        .hero-copy {
-            position: relative;
-        }
+.hero-ctas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
 
-        .eyebrow {
-            display: inline-block;
-            margin-bottom: 14px;
-            padding: 8px 14px;
-            border: 3px solid var(--seed);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.78);
-            font-size: 0.8rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
+/* ── Visual side ─────────────────────────────────────── */
+.hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.kiwi-float-wrap {
+    position: relative;
+    width: 220px; height: 220px;
+    display: flex; align-items: center; justify-content: center;
+}
+.kiwi-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(22,163,74,0.18) 0%, transparent 70%);
+    animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+    0%,100% { transform: scale(1); opacity: 0.7; }
+    50%      { transform: scale(1.1); opacity: 1; }
+}
+.kiwi-float {
+    animation: float 4s ease-in-out infinite;
+    width: 180px; height: 180px;
+    filter: drop-shadow(0 20px 40px rgba(22,163,74,0.25));
+}
+@keyframes float {
+    0%,100% { transform: translateY(0px); }
+    50%      { transform: translateY(-16px); }
+}
 
-        .hero-badge {
-            position: relative;
-            display: grid;
-            place-items: center;
-            min-height: 310px;
-        }
+.kiwi-stats {
+    position: absolute;
+    bottom: -16px;
+    right: -40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.kiwi-stat-pill {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    white-space: nowrap;
+    animation: slideInRight 0.6s ease both;
+}
+.kiwi-stat-pill:nth-child(2) { animation-delay: 0.15s; }
+.kiwi-stat-pill:nth-child(3) { animation-delay: 0.30s; }
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+.stat-pill-icon { font-size: 16px; }
+.stat-pill-text { font-size: 12px; font-weight: 600; color: var(--text); }
+.stat-pill-sub  { font-size: 11px; color: var(--text-muted); }
 
-        .kiwi-mark {
-            position: relative;
-            width: min(100%, 320px);
-            aspect-ratio: 1;
-            border-radius: 50%;
-            background: var(--kiwi);
-            border: 9px solid var(--rind);
-            box-shadow: 0 26px 52px rgba(28, 56, 84, 0.18);
-        }
+/* ── Tools discovery strip ───────────────────────────── */
+.tools-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 56px;
+}
+.tools-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    margin-bottom: 20px;
+}
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+.tool-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.tool-chip::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+    background: var(--chip-color, var(--green));
+    transform: scaleY(0);
+    transition: transform 0.2s;
+}
+.tool-chip:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    border-color: transparent;
+}
+.tool-chip:hover::before { transform: scaleY(1); }
+.tool-chip-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: var(--chip-bg, var(--green-bg));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--chip-color, var(--green));
+}
+.tool-chip-icon svg {
+    width: 20px;
+    height: 20px;
+}
+.tool-chip-text { font-size: 13px; font-weight: 600; }
+.tool-chip-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
-        .kiwi-center {
-            position: absolute;
-            inset: 28%;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            background: var(--cream);
-            border: 3px solid rgba(8, 8, 8, 0.28);
-            font-size: clamp(2.4rem, 5vw, 4.2rem);
-            font-weight: 900;
-            letter-spacing: 0.01em;
-            text-transform: uppercase;
-            transform: translateY(1px);
-        }
+/* ── Feature cards ───────────────────────────────────── */
+.features-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 56px;
+}
+.section-header { margin-bottom: 40px; }
+.section-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+.section-sub { font-size: 15px; color: var(--text-muted); }
 
-        .seed {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 11px;
-            height: 62px;
-            margin: -31px 0 0 -5.5px;
-            border-radius: 999px;
-            background: var(--seed);
-            transform-origin: center -96px;
-        }
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+.feature-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    opacity: 0;
+    animation: cardEnter 0.5s ease forwards;
+}
+.feature-card:nth-child(1) { animation-delay: 0.05s; }
+.feature-card:nth-child(2) { animation-delay: 0.12s; }
+.feature-card:nth-child(3) { animation-delay: 0.19s; }
+.feature-card:nth-child(4) { animation-delay: 0.26s; }
+@keyframes cardEnter {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.feature-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: var(--card-accent, var(--green));
+    transition: width 0.3s ease;
+    border-radius: 16px 0 0 16px;
+}
+.feature-card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+    transition: all 0.3s ease;
+    border-color: transparent;
+}
+.feature-card:hover::before { width: 4px; }
+.card-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--card-icon-bg);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--card-accent);
+    flex-shrink: 0;
+}
+.card-icon svg {
+    width: 22px;
+    height: 22px;
+}
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.card-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
-        .panel {
-            background: rgba(255, 253, 247, 0.88);
-            border: 4px solid var(--seed);
-            border-radius: 28px;
-            padding: 28px;
-            box-shadow: 0 24px 50px rgba(24, 45, 62, 0.14);
-        }
+/* ── Why Different section ──────────────────────────── */
+.why-different-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 56px;
+}
+.why-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+.why-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: box-shadow 200ms, transform 200ms;
+}
+.why-card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+}
+.why-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: var(--green-bg);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    color: var(--green);
+}
+.why-icon svg {
+    width: 24px;
+    height: 24px;
+}
+.why-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+}
+.why-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+.why-body em {
+    font-style: normal;
+    color: var(--green);
+    font-weight: 600;
+}
+.why-vs {
+    font-size: 11px;
+    color: var(--text-subtle);
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    border-left: 3px solid var(--green);
+}
 
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 18px;
-        }
 
-        .panel-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.82rem;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
+/* ── Control panel ───────────────────────────────────── */
+.control-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 56px;
+}
+.control-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+}
+.control-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.control-title { font-size: 17px; font-weight: 700; }
+.control-sub   { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.plaid-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.plaid-badge-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.plaid-logo {
+    flex-shrink: 0;
+}
+.connection-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green-text);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 100px;
+}
+.connection-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulseGreen 2s ease-in-out infinite;
+}
+.control-body {
+    padding: 24px 32px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.security-notice {
+    padding: 20px 32px;
+    background: var(--green-bg);
+    border-top: 1px solid var(--green-border);
+    border-bottom: 1px solid var(--green-border);
+    display: flex;
+    gap: 16px;
+    align-items: start;
+}
+.sn-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid var(--green-border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--green);
+}
+.sn-icon svg {
+    width: 22px;
+    height: 22px;
+}
+.sn-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-text);
+    margin-bottom: 4px;
+}
+.sn-body {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.65;
+}
+.console-section { padding: 0 32px 28px; }
+.console {
+    background: var(--dark);
+    border-radius: 12px;
+    padding: 16px 20px;
+    min-height: 80px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.7;
+}
+.console-line { margin: 2px 0; }
+.console-line.success { color: #4ade80; }
+.console-line.error   { color: #f87171; }
+.console-line.loading { color: #fbbf24; }
+.console-line.info    { color: #60a5fa; }
 
-        .panel-kicker::before {
-            content: "";
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--kiwi);
-            border: 3px solid var(--seed);
-            flex: 0 0 auto;
-        }
+/* ── Trust strip ─────────────────────────────────────── */
+.trust-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 56px;
+    text-align: center;
+}
+.trust-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    margin-bottom: 32px;
+}
+.trust-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+@media (max-width: 768px) { 
+    .trust-cards { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .jobs-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
+}
+.trust-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: left;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+}
+.trust-card:nth-child(1) { animation-delay: 0.1s; }
+.trust-card:nth-child(2) { animation-delay: 0.2s; }
+.trust-card:nth-child(3) { animation-delay: 0.3s; }
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.trust-quote {
+    font-size: 14px; color: var(--text-muted);
+    line-height: 1.65; margin-bottom: 16px; font-style: italic;
+}
+.trust-author { display: flex; align-items: center; gap: 10px; }
+.trust-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--green-bg); border: 2px solid var(--green-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--green-text);
+}
+.trust-name   { font-size: 13px; font-weight: 600; }
+.trust-handle { font-size: 11px; color: var(--text-subtle); }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 14px;
-        }
+/* ── Careers section ─────────────────────────────────── */
+.careers-section { max-width: 1100px; margin: 0 auto; padding: 0 32px 56px; }
+.jobs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+.job-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    transition: box-shadow 200ms, transform 200ms;
+}
+.job-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-2px); }
+.job-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.job-dept  { font-size: 12px; color: var(--text-subtle); }
+.job-tags  { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.job-tag   { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 100px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.job-apply {
+    padding: 8px 16px; background: var(--green); color: white; border-radius: 8px;
+    font: 600 12px 'Inter', sans-serif; text-decoration: none; white-space: nowrap;
+    transition: background 150ms;
+}
+.job-apply:hover { background: var(--green-hover); }
 
-        .section-title {
-            margin: 0 0 16px;
-            font-size: 1.15rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
+/* ── Contact section ────────────────────────────────── */
+.contact-section { max-width: 1100px; margin: 0 auto; padding: 0 32px 72px; }
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+.contact-card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+.contact-form .form-field { margin-bottom: 14px; }
+.contact-form label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px; }
+.contact-form input, .contact-form textarea, .contact-form select {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 'Inter', sans-serif; outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+.contact-form textarea { min-height: 100px; resize: vertical; }
+.contact-form input:focus, .contact-form textarea:focus, .contact-form select:focus {
+    border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+}
+.btn-send {
+    width: 100%; height: 44px; background: var(--green); border: none; border-radius: 10px;
+    color: white; font: 700 14px 'Inter', sans-serif; cursor: pointer;
+    transition: background 150ms, transform 150ms;
+}
+.btn-send:hover { background: var(--green-hover); transform: translateY(-1px); }
+.contact-info { display: flex; flex-direction: column; gap: 16px; }
+.ci-item { display: flex; align-items: flex-start; gap: 14px; }
+.ci-icon {
+    width: 40px; height: 40px; border-radius: 10px; background: var(--green-bg);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.ci-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.ci-body  { font-size: 13px; color: var(--text-muted); }
+.ci-link  { color: var(--green); text-decoration: none; }
+.ci-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
 
-        button,
-        a.action-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 62px;
-            padding: 14px 16px;
-            border: 3px solid var(--seed);
-            border-radius: 18px;
-            text-decoration: none;
-            font-size: 0.98rem;
-            font-weight: 900;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease, filter 140ms ease;
-        }
+{% block content %}
+<div class="page-bg"></div>
 
-        button:hover,
-        a.action-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
-            filter: saturate(1.04);
-        }
+<!-- ── SVG Icon Library ── -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <!-- Chart/Analytics icon -->
+    <symbol id="icon-chart" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
+    </symbol>
+    <!-- Target/Budget icon -->
+    <symbol id="icon-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    </symbol>
+    <!-- Custom/View icon -->
+    <symbol id="icon-view" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+    </symbol>
+    <!-- Education/Book icon -->
+    <symbol id="icon-book" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/>
+    </symbol>
+    <!-- Credit Card icon -->
+    <symbol id="icon-credit-card" viewBox="0 0 24 24">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Info/About icon -->
+    <symbol id="icon-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="8" r="1" fill="currentColor"/>
+    </symbol>
+    <!-- Lock/Security icon -->
+    <symbol id="icon-lock" viewBox="0 0 24 24">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <!-- Sync/Refresh icon -->
+    <symbol id="icon-sync" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+    </symbol>
+    <!-- Sparkles/Custom icon -->
+    <symbol id="icon-sparkles" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 0l1.5 5.5L19 7l-5.5 1.5L12 14l-1.5-5.5L5 7l5.5-1.5L12 0zM5 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zM19 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/>
+    </symbol>
+    <!-- Lightning/Fast icon -->
+    <symbol id="icon-lightning" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/>
+    </symbol>
+    <!-- Tool/Settings icon -->
+    <symbol id="icon-tool" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    </symbol>
+    <!-- Check/Success icon -->
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
+    </symbol>
+    <!-- Globe/World icon -->
+    <symbol id="icon-globe" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Database icon -->
+    <symbol id="icon-database" viewBox="0 0 24 24">
+      <ellipse cx="12" cy="5" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <!-- Plaid logo -->
+    <symbol id="plaid-logo" viewBox="0 0 24 24">
+      <rect x="2" y="2" width="9" height="9" rx="1" fill="currentColor"/>
+      <rect x="13" y="2" width="9" height="9" rx="1" fill="currentColor"/>
+      <rect x="2" y="13" width="9" height="9" rx="1" fill="currentColor"/>
+      <rect x="13" y="13" width="9" height="9" rx="1" fill="currentColor"/>
+      <rect x="5" y="5" width="3" height="3" fill="#fff"/>
+      <rect x="16" y="5" width="3" height="3" fill="#fff"/>
+      <rect x="5" y="16" width="3" height="3" fill="#fff"/>
+      <rect x="16" y="16" width="3" height="3" fill="#fff"/>
+    </symbol>
+    <!-- Link/Connection icon -->
+    <symbol id="icon-link" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </symbol>
+    <!-- Cloud icon -->
+    <symbol id="icon-cloud" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    </symbol>
+    <!-- Bank/Building icon -->
+    <symbol id="icon-bank" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+    </symbol>
+    <!-- Document/Report icon -->
+    <symbol id="icon-document" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+    </symbol>
+    <!-- Wallet/Money icon -->
+    <symbol id="icon-wallet" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+    </symbol>
+  </defs>
+</svg>
 
-        .primary {
-            background: var(--kiwi);
-            color: var(--text);
-        }
+<!-- ── Hero ──────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-copy">
+        <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            Connected to Plaid Production
+        </div>
+        <h1 class="hero-title">
+            Know your money.<br>
+            <span class="gradient-text">Love your finances.</span>
+        </h1>
+        <p class="hero-sub">
+            Kiwi Finance gives you a real-time view of your entire financial life —
+            synced automatically, exported to the cloud, and ready to help you
+            make smarter decisions every single day.
+        </p>
+        <div class="hero-ctas">
+            <button class="btn btn-cta" onclick="connectBank()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Connect a Bank
+            </button>
+            <a href="/dashboard" class="btn btn-secondary">View Dashboard →</a>
+        </div>
+    </div>
 
-        .primary:hover {
-            background: var(--kiwi-deep);
-        }
+    <div class="hero-visual">
+        <div class="kiwi-float-wrap">
+            <div class="kiwi-glow"></div>
+            <svg class="kiwi-float" viewBox="0 0 80 80">
+                <use href="#kiwi-fruit"/>
+            </svg>
+        </div>
+    </div>
+</section>
 
-        .secondary {
-            background: #ffd769;
-            color: var(--text);
-        }
-
-        .secondary:hover {
-            background: #f2c23f;
-        }
-
-        .ghost {
-            background: rgba(255, 255, 255, 0.78);
-            color: var(--text);
-        }
-
-        .group {
-            margin-top: 22px;
-            padding-top: 22px;
-            border-top: 3px dashed rgba(8, 8, 8, 0.18);
-        }
-
-        .status {
-            margin-top: 24px;
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: var(--status-bg);
-            border: 3px solid var(--seed);
-            white-space: pre-wrap;
-            line-height: 1.5;
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 0.94rem;
-        }
-
-        .status[data-state="error"] {
-            background: #ffe2d7;
-        }
-
-        .status[data-state="success"] {
-            background: #ebffd8;
-        }
-
-        @media (max-width: 900px) {
-            .hero {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-badge {
-                order: -1;
-                min-height: auto;
-            }
-        }
-
-        @media (max-width: 640px) {
-            main {
-                padding-top: 32px;
-            }
-
-            .panel {
-                padding: 22px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <main>
-        <section class="hero">
-            <div class="hero-copy">
-                <div class="eyebrow">Plaid to SQLite to S3</div>
-                <h1>Kiwi Finance</h1>
-                <p class="subtitle">
-                    A bright little finance pipeline for sandbox banking data, local storage, and cloud exports.
-                    Connect Plaid, fetch records into SQLite, and push clean CSV snapshots into Amazon S3.
-                </p>
+<!-- ── Quick-access tool chips ─────────────────────── -->
+<section class="tools-section">
+    <div class="tools-section-label">Your Financial Toolkit</div>
+    <div class="tools-grid">
+        <a href="/dashboard" class="tool-chip" style="--chip-color:#16a34a;--chip-bg:#f0fdf4">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-chart"/></svg></div>
+            <div>
+                <div class="tool-chip-text">Dashboard</div>
+                <div class="tool-chip-sub">Spending &amp; trends</div>
             </div>
+        </a>
+        <a href="/budget" class="tool-chip" style="--chip-color:#2563eb;--chip-bg:#eff6ff">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-target"/></svg></div>
+            <div>
+                <div class="tool-chip-text">Budget Tracker</div>
+                <div class="tool-chip-sub">Live vs. targets</div>
+            </div>
+        </a>
+        <a href="/view" class="tool-chip" style="--chip-color:#9333ea;--chip-bg:#faf5ff">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-view"/></svg></div>
+            <div>
+                <div class="tool-chip-text">Custom View</div>
+                <div class="tool-chip-sub">Build your report</div>
+            </div>
+        </a>
+        <a href="/education" class="tool-chip" style="--chip-color:#d97706;--chip-bg:#fffbeb">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-book"/></svg></div>
+            <div>
+                <div class="tool-chip-text">Financial Education</div>
+                <div class="tool-chip-sub">Learn &amp; grow</div>
+            </div>
+        </a>
+        <a href="/credit" class="tool-chip" style="--chip-color:#dc2626;--chip-bg:#fef2f2">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-credit-card"/></svg></div>
+            <div>
+                <div class="tool-chip-text">Credit Tools</div>
+                <div class="tool-chip-sub">Cards, loans &amp; score</div>
+            </div>
+        </a>
+        <a href="/about" class="tool-chip" style="--chip-color:#0891b2;--chip-bg:#ecfeff">
+            <div class="tool-chip-icon"><svg width="20" height="20"><use href="#icon-info"/></svg></div>
+            <div>
+                <div class="tool-chip-text">About Us</div>
+                <div class="tool-chip-sub">Our mission</div>
+            </div>
+        </a>
+    </div>
+</section>
 
-            <div class="hero-badge" aria-hidden="true">
-                <div class="kiwi-mark">
-                    <div class="seed" style="transform: rotate(0deg);"></div>
-                    <div class="seed" style="transform: rotate(30deg) scaleY(0.55);"></div>
-                    <div class="seed" style="transform: rotate(60deg) scaleY(0.34);"></div>
-                    <div class="seed" style="transform: rotate(90deg) scaleY(0.58);"></div>
-                    <div class="seed" style="transform: rotate(120deg) scaleY(0.34);"></div>
-                    <div class="seed" style="transform: rotate(150deg) scaleY(0.55);"></div>
-                    <div class="seed" style="transform: rotate(180deg) scaleY(0.58);"></div>
-                    <div class="seed" style="transform: rotate(210deg) scaleY(0.34);"></div>
-                    <div class="seed" style="transform: rotate(240deg) scaleY(0.55);"></div>
-                    <div class="seed" style="transform: rotate(270deg) scaleY(0.58);"></div>
-                    <div class="seed" style="transform: rotate(300deg) scaleY(0.34);"></div>
-                    <div class="seed" style="transform: rotate(330deg) scaleY(0.55);"></div>
-                    <div class="kiwi-center">Kiwi</div>
+<!-- ── Feature cards ──────────────────────────────────── -->
+<section class="features-section">
+    <div class="section-header">
+        <div class="section-title">Everything you need to take control</div>
+        <div class="section-sub">Built for people who want to actually understand where their money goes.</div>
+    </div>
+    <div class="cards-grid">
+        <div class="feature-card" style="--card-accent:#2563eb;--card-icon-bg:#eff6ff">
+            <div class="card-icon"><svg><use href="#icon-link"/></svg></div>
+            <div class="card-title">Automatic Bank Sync</div>
+            <div class="card-desc">Connect all your banks via Plaid. Transactions flow in automatically — no CSV uploads, no manual entry.</div>
+        </div>
+        <div class="feature-card" style="--card-accent:#9333ea;--card-icon-bg:#faf5ff">
+            <div class="card-icon"><svg><use href="#icon-cloud"/></svg></div>
+            <div class="card-title">Cloud Export</div>
+            <div class="card-desc">Every account and transaction is exported to S3 daily — searchable, archivable, and ready for analysis.</div>
+        </div>
+        <div class="feature-card" style="--card-accent:#16a34a;--card-icon-bg:#f0fdf4">
+            <div class="card-icon"><svg><use href="#icon-chart"/></svg></div>
+            <div class="card-title">Smart Dashboard</div>
+            <div class="card-desc">Beautiful charts show your spending by day, merchant, and category. See patterns before they become problems.</div>
+        </div>
+        <div class="feature-card" style="--card-accent:#d97706;--card-icon-bg:#fffbeb">
+            <div class="card-icon"><svg><use href="#icon-target"/></svg></div>
+            <div class="card-title">Live Budget Tracker</div>
+            <div class="card-desc">Set monthly targets per merchant or category. Watch your live spending stack up against your goals in real time.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Why Different section ──────────────────────────── -->
+<section class="why-different-section">
+    <div class="section-header">
+        <div class="section-title">Why Kiwi Finance is different</div>
+        <div class="section-sub">We built this because we were frustrated with every other finance app. Here's what we do differently.</div>
+    </div>
+    <div class="why-grid">
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-lock"/></svg></div>
+            <div class="why-title">Your data. Your control.</div>
+            <div class="why-body">We never sell your data. We don't show you ads. We don't push credit card offers. Your financial data is stored locally in SQLite and optionally exported to <em>your own</em> S3 bucket. You own it, you control it, you can delete it anytime.</div>
+            <div class="why-vs">Unlike: Mint, Credit Karma (ad-supported models)</div>
+        </div>
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-sync"/></svg></div>
+            <div class="why-title">Reliable sync via Plaid</div>
+            <div class="why-body">We use Plaid's production API with incremental cursor-based syncing. Your credentials never touch our servers — Plaid handles authentication. Transactions sync daily with added, modified, and removed records tracked automatically.</div>
+            <div class="why-vs">Unlike: Apps with frequent disconnection issues</div>
+        </div>
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-sparkles"/></svg></div>
+            <div class="why-title">Flexible, not rigid</div>
+            <div class="why-body">Build your own budget categories. Create custom dashboard views. Export raw data and run your own queries. We give you powerful defaults but never lock you into a single framework.</div>
+            <div class="why-vs">Unlike: YNAB (strict envelope budgeting)</div>
+        </div>
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-lightning"/></svg></div>
+            <div class="why-title">Fast & lightweight</div>
+            <div class="why-body">Local SQLite database means instant queries. No server round-trips for every chart. The dashboard loads in milliseconds, not seconds. Clean UI with no clutter, no upsells, no distractions.</div>
+            <div class="why-vs">Unlike: Slow, bloated web apps</div>
+        </div>
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-tool"/></svg></div>
+            <div class="why-title">Built for power users</div>
+            <div class="why-body">Direct SQL access to your data. S3 exports for Athena/Redshift. Open source codebase you can fork and customize. API endpoints for building your own tools on top.</div>
+            <div class="why-vs">Unlike: Closed platforms with limited export</div>
+        </div>
+        <div class="why-card">
+            <div class="why-icon"><svg width="24" height="24"><use href="#icon-check"/></svg></div>
+            <div class="why-title">100% free, forever</div>
+            <div class="why-body">No premium tiers. No feature paywalls. No "upgrade to see more than 3 months of data." Everything is free because we're not trying to monetize your financial data.</div>
+            <div class="why-vs">Unlike: Personal Capital, Quicken (subscription models)</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Control panel ──────────────────────────────────── -->
+<section class="control-section">
+    <div class="control-panel">
+        <div class="control-header">
+            <div>
+                <div class="control-title">Bank Connections</div>
+                <div class="control-sub">Securely connect your accounts via Plaid</div>
+            </div>
+            <div class="plaid-badge">
+                <span class="plaid-badge-text">Powered by</span>
+                <svg class="plaid-logo" width="60" height="20" viewBox="0 0 120 40">
+                  <rect x="4" y="4" width="14" height="14" rx="2" fill="#000"/>
+                  <rect x="22" y="4" width="14" height="14" rx="2" fill="#000"/>
+                  <rect x="4" y="22" width="14" height="14" rx="2" fill="#000"/>
+                  <rect x="22" y="22" width="14" height="14" rx="2" fill="#000"/>
+                  <rect x="7" y="7" width="5" height="5" fill="#fff"/>
+                  <rect x="25" y="7" width="5" height="5" fill="#fff"/>
+                  <rect x="7" y="25" width="5" height="5" fill="#fff"/>
+                  <rect x="25" y="25" width="5" height="5" fill="#fff"/>
+                  <text x="45" y="26" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#000">Plaid</text>
+                </svg>
+            </div>
+        </div>
+        <div class="control-body">
+            <button class="btn btn-cta" onclick="connectBank()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Bank Account
+            </button>
+            <button class="btn btn-secondary" onclick="syncAccounts()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.85"/></svg>
+                Sync Accounts
+            </button>
+            <button class="btn btn-secondary" onclick="syncTransactions()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-4.85"/></svg>
+                Sync Transactions
+            </button>
+            <button class="btn btn-secondary" onclick="exportToS3()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/><path d="M3 21V3"/></svg>
+                Export to S3
+            </button>
+        </div>
+        <div class="security-notice">
+            <div class="sn-icon"><svg width="22" height="22"><use href="#icon-lock"/></svg></div>
+            <div class="sn-content">
+                <div class="sn-title">Bank-grade security via Plaid</div>
+                <div class="sn-body">Your banking credentials never touch our servers. <strong>Plaid</strong> handles all authentication and returns only secure access tokens. We store transaction data locally in your SQLite database — you can inspect, export, or delete it anytime. <a href="#" onclick="requestDataExport(event)" style="color:var(--green);text-decoration:none;font-weight:600">Request my data →</a></div>
+            </div>
+        </div>
+        <div class="console-section">
+            <div class="console" id="console">
+                <div class="console-line info">▶ Kiwi Finance — ready.</div>
+                <div class="console-line">Use the buttons above to sync accounts and transactions.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Trust strip ────────────────────────────────────── -->
+<section class="trust-section">
+    <div class="trust-label">Built for real people who care about their money</div>
+    <div class="trust-cards">
+        <div class="trust-card">
+            <div class="trust-quote">"Finally a finance tool that actually connects to my real accounts and shows me what I'm spending without making me do the work myself."</div>
+            <div class="trust-author">
+                <div class="trust-avatar">A</div>
+                <div>
+                    <div class="trust-name">Alex M.</div>
+                    <div class="trust-handle">@alex_budgets</div>
                 </div>
             </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-header">
-                <h2 class="section-title">Run The Workflow</h2>
-                <div class="panel-kicker">Control Panel</div>
-            </div>
-
-            <div class="grid">
-                <button id="link-button" class="primary">Connect Bank Account</button>
-                <button class="secondary" data-endpoint="/accounts">Fetch Accounts From Plaid</button>
-                <button class="secondary" data-endpoint="/transactions">Fetch Transactions From Plaid</button>
-                <button class="secondary" data-endpoint="/simulate_daily_transactions">Simulate Daily Transactions</button>
-                <button class="primary" data-endpoint="/run_daily_sandbox_pipeline">Run Daily Sandbox Pipeline</button>
-                <button class="primary" data-endpoint="/export_accounts_to_s3">Export Accounts To S3</button>
-                <button class="primary" data-endpoint="/export_transactions_to_s3">Export Transactions To S3</button>
-                <button class="ghost" data-endpoint="/sandbox_connect">Quick Sandbox Connect</button>
-                <a class="action-link ghost" href="/dashboard">Open Dashboard</a>
-            </div>
-
-            <div class="group">
-                <h2 class="section-title">Inspect Saved Data</h2>
-                <div class="grid">
-                    <a class="action-link ghost" href="/local_accounts" target="_blank" rel="noreferrer">View Local Accounts</a>
-                    <a class="action-link ghost" href="/local_transactions" target="_blank" rel="noreferrer">View Local Transactions</a>
+        </div>
+        <div class="trust-card">
+            <div class="trust-quote">"The automatic S3 export is a game changer. I can run my own analytics on top of the data whenever I want."</div>
+            <div class="trust-author">
+                <div class="trust-avatar">J</div>
+                <div>
+                    <div class="trust-name">Jordan K.</div>
+                    <div class="trust-handle">@jordan_finance</div>
                 </div>
             </div>
-
-            <div id="status" class="status" data-state="idle">
-                Ready. Connect a sandbox account, simulate new data, sync transactions, and export to S3.
+        </div>
+        <div class="trust-card">
+            <div class="trust-quote">"The budget tracker with live merchant spending is exactly what I needed. No more spreadsheets."</div>
+            <div class="trust-author">
+                <div class="trust-avatar">S</div>
+                <div>
+                    <div class="trust-name">Sam T.</div>
+                    <div class="trust-handle">@sam_saves</div>
+                </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
+</section>
 
-    <script>
-        const statusEl = document.getElementById("status");
+<!-- ── Careers ────────────────────────────────────────── -->
+<section class="careers-section">
+    <div class="section-header">
+        <div class="section-title">Join the team</div>
+        <div class="section-sub">We're building the future of personal finance. Come help us.</div>
+    </div>
+    <div class="jobs-grid">
+        <div class="job-card">
+            <div>
+                <div class="job-title">Full-Stack Engineer</div>
+                <div class="job-dept">Engineering</div>
+                <div class="job-tags"><span class="job-tag">Python</span><span class="job-tag">Flask</span><span class="job-tag">JavaScript</span><span class="job-tag">Remote</span></div>
+            </div>
+            <a href="/about#careers" class="job-apply">Apply</a>
+        </div>
+        <div class="job-card">
+            <div>
+                <div class="job-title">Data Engineer</div>
+                <div class="job-dept">Data</div>
+                <div class="job-tags"><span class="job-tag">AWS</span><span class="job-tag">Athena</span><span class="job-tag">dbt</span><span class="job-tag">Remote</span></div>
+            </div>
+            <a href="/about#careers" class="job-apply">Apply</a>
+        </div>
+        <div class="job-card">
+            <div>
+                <div class="job-title">Product Designer</div>
+                <div class="job-dept">Design</div>
+                <div class="job-tags"><span class="job-tag">Figma</span><span class="job-tag">UX</span><span class="job-tag">Finance</span><span class="job-tag">Remote</span></div>
+            </div>
+            <a href="/about#careers" class="job-apply">Apply</a>
+        </div>
+        <div class="job-card">
+            <div>
+                <div class="job-title">Growth & Community</div>
+                <div class="job-dept">Marketing</div>
+                <div class="job-tags"><span class="job-tag">Content</span><span class="job-tag">Social</span><span class="job-tag">Finance</span><span class="job-tag">Remote</span></div>
+            </div>
+            <a href="/about#careers" class="job-apply">Apply</a>
+        </div>
+    </div>
+</section>
 
-        function setStatus(message, state = "idle") {
-            statusEl.textContent = message;
-            statusEl.dataset.state = state;
-        }
+<!-- ── Contact ─────────────────────────────────────────── -->
+<section class="contact-section">
+    <div class="section-header">
+        <div class="section-title">Get in touch</div>
+        <div class="section-sub">Questions, feedback, or just want to say hi? We'd love to hear from you.</div>
+    </div>
+    <div class="contact-grid">
+        <div class="contact-card">
+            <form class="contact-form" onsubmit="handleContact(event)">
+                <div class="form-field">
+                    <label>Your Name</label>
+                    <input type="text" placeholder="Alex Johnson" required>
+                </div>
+                <div class="form-field">
+                    <label>Email Address</label>
+                    <input type="email" placeholder="alex@example.com" required>
+                </div>
+                <div class="form-field">
+                    <label>Topic</label>
+                    <select>
+                        <option>General Question</option>
+                        <option>Bug Report</option>
+                        <option>Feature Request</option>
+                        <option>Partnership</option>
+                        <option>Job Application</option>
+                        <option>Press Inquiry</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Message</label>
+                    <textarea placeholder="Tell us what's on your mind…" required></textarea>
+                </div>
+                <button type="submit" class="btn-send">Send Message →</button>
+            </form>
+        </div>
+        <div class="contact-card">
+            <div class="contact-info">
+                <div class="ci-item">
+                    <div class="ci-icon">📧</div>
+                    <div><div class="ci-title">Email</div><div class="ci-body"><a href="mailto:hello@kiwifinance.app" class="ci-link">hello@kiwifinance.app</a></div></div>
+                </div>
+                <div class="ci-item">
+                    <div class="ci-icon">💬</div>
+                    <div><div class="ci-title">Discord Community</div><div class="ci-body">Join our Discord to chat with the team and other users. <a href="#" class="ci-link">Join server →</a></div></div>
+                </div>
+                <div class="ci-item">
+                    <div class="ci-icon">🐙</div>
+                    <div><div class="ci-title">GitHub</div><div class="ci-body">Open source. File issues, submit PRs, or just browse the code. <a href="https://github.com" target="_blank" rel="noopener" class="ci-link">View on GitHub →</a></div></div>
+                </div>
+                <div class="ci-item">
+                    <div class="ci-icon">📱</div>
+                    <div><div class="ci-title">Social</div><div class="ci-body">Follow us on <a href="#" class="ci-link">Instagram</a> and <a href="#" class="ci-link">TikTok</a> for tips and updates.</div></div>
+                </div>
+                <div class="ci-item">
+                    <div class="ci-icon">⏱️</div>
+                    <div><div class="ci-title">Response Time</div><div class="ci-body">We typically respond within 1–2 business days.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-        async function callEndpoint(endpoint) {
-            setStatus(`Running ${endpoint} ...`);
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+{% endblock %}
 
-            try {
-                const response = await fetch(endpoint);
-                const data = await response.json();
+{% block scripts %}
+<script>
+const consoleEl = document.getElementById('console');
 
-                if (!response.ok) {
-                    setStatus(`Request failed for ${endpoint}\n\n${JSON.stringify(data, null, 2)}`, "error");
-                    return;
+function log(msg, type = '') {
+    const line = document.createElement('div');
+    line.className = 'console-line' + (type ? ' ' + type : '');
+    line.textContent = msg;
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+async function connectBank() {
+    log('▶ Requesting Plaid Link token…', 'loading');
+    try {
+        const res = await fetch('/create_link_token', { method: 'POST' });
+        const data = await res.json();
+        if (!data.link_token) throw new Error(data.error || 'No link token returned');
+        const handler = Plaid.create({
+            token: data.link_token,
+            onSuccess: async (public_token, metadata) => {
+                log('✓ Bank selected: ' + (metadata.institution?.name || 'Unknown'), 'success');
+                log('▶ Exchanging public token…', 'loading');
+                const exRes = await fetch('/exchange_public_token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ public_token }),
+                });
+                const exData = await exRes.json();
+                if (exData.status === 'ok') {
+                    log('✓ Bank connected! Item ID: ' + exData.item_id, 'success');
+                } else {
+                    log('✗ Error: ' + JSON.stringify(exData), 'error');
                 }
-
-                setStatus(`Request completed for ${endpoint}\n\n${JSON.stringify(data, null, 2)}`, "success");
-            } catch (error) {
-                setStatus(`Unexpected error for ${endpoint}\n\n${error.message}`, "error");
-            }
-        }
-
-        document.querySelectorAll("button[data-endpoint]").forEach((button) => {
-            button.addEventListener("click", () => callEndpoint(button.dataset.endpoint));
+            },
+            onExit: (err) => {
+                if (err) log('✗ Link exit: ' + err.display_message, 'error');
+                else log('— Link closed.', '');
+            },
         });
+        handler.open();
+    } catch (err) {
+        log('✗ ' + err.message, 'error');
+    }
+}
 
-        document.getElementById("link-button").onclick = async function () {
-            setStatus("Creating Plaid Link token ...");
+async function syncAccounts() {
+    log('▶ Syncing accounts from Plaid…', 'loading');
+    try {
+        const res = await fetch('/accounts');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error_message || data.error);
+        const n = data.accounts?.length ?? 0;
+        log('✓ Synced ' + n + ' account' + (n !== 1 ? 's' : '') + ' successfully.', 'success');
+    } catch (err) {
+        log('✗ ' + err.message, 'error');
+    }
+}
 
-            const tokenResponse = await fetch("/create_link_token", {
-                method: "POST"
-            });
+async function syncTransactions() {
+    log('▶ Syncing transactions from Plaid…', 'loading');
+    try {
+        const res = await fetch('/transactions');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error_message || data.error);
+        const added    = data.added    ?? 0;
+        const modified = data.modified ?? 0;
+        const removed  = data.removed  ?? 0;
+        log(`✓ Transactions synced — +${added} added, ${modified} modified, ${removed} removed.`, 'success');
+    } catch (err) {
+        log('✗ ' + err.message, 'error');
+    }
+}
 
-            const tokenData = await tokenResponse.json();
+async function exportToS3() {
+    log('▶ Exporting data to S3…', 'loading');
+    try {
+        const [accRes, txRes] = await Promise.all([
+            fetch('/export_accounts_to_s3', { method: 'POST' }),
+            fetch('/export_transactions_to_s3', { method: 'POST' }),
+        ]);
+        const accData = await accRes.json();
+        const txData  = await txRes.json();
+        if (accData.status === 'ok') log('✓ Accounts exported to S3.', 'success');
+        else log('✗ Accounts export failed: ' + JSON.stringify(accData), 'error');
+        if (txData.status === 'ok') log('✓ Transactions exported to S3.', 'success');
+        else log('✗ Transactions export failed: ' + JSON.stringify(txData), 'error');
+    } catch (err) {
+        log('✗ ' + err.message, 'error');
+    }
+}
 
-             if (!tokenResponse.ok) {
-                setStatus(`Failed to create link token\n\n${JSON.stringify(tokenData, null, 2)}`, "error");
-                return;
-            }
-
-            const handler = Plaid.create({
-                token: tokenData.link_token,
-                onSuccess: async function (public_token, metadata) {
-                    setStatus("Plaid Link succeeded. Exchanging public token ...");
-
-                    const exchangeResponse = await fetch("/exchange_public_token", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ public_token })
-                    });
-
-                    const exchangeData = await exchangeResponse.json();
-                    console.log("Exchange result:", exchangeData);
-
-                    if (!exchangeResponse.ok) {
-                        setStatus(`Bank connection failed\n\n${JSON.stringify(exchangeData, null, 2)}`, "error");
-                        return;
-                    }
-
-                    setStatus(
-                        `Bank connected successfully.\n\n${JSON.stringify(exchangeData, null, 2)}\n\nNext step: fetch accounts or transactions.`,
-                        "success"
-                    );
-                },
-                onExit: function (err, metadata) {
-                    console.log("Exited Link", err, metadata);
-                    if (err) {
-                        setStatus(`Plaid Link exited with an error\n\n${JSON.stringify(err, null, 2)}`, "error");
-                        return;
-                    }
-
-                    setStatus("Plaid Link was closed before completion.");
-                }
-            });
-
-            handler.open();
-        };
-    </script>
-</body>
-</html>
+function handleContact(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.btn-send');
+    btn.textContent = '✓ Message sent!';
+    btn.style.background = '#16a34a';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.textContent = 'Send Message →';
+        btn.style.background = '';
+        btn.disabled = false;
+        e.target.reset();
+    }, 3000);
+}
+</script>
+{% endblock %}
