@@ -14,6 +14,9 @@ class Config:
     PLAID_CLIENT_ID = os.getenv("PLAID_CLIENT_ID")
     PLAID_SECRET = os.getenv("PLAID_SECRET")
     PLAID_ENV = os.getenv("PLAID_ENV", "sandbox")
+    SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
+    DATABASE_URL = os.getenv("DATABASE_URL")  # e.g. postgresql://user:pass@host:5432/dbname
+    DATABASE_URL_SECRET_ARN = os.getenv("DATABASE_URL_SECRET_ARN")
     AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET", "kiwi-finance-data-krisbro-314171434946")
     AWS_S3_TRANSACTIONS_PREFIX = os.getenv(
         "AWS_S3_TRANSACTIONS_PREFIX",

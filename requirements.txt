@@ -3,3 +3,6 @@ python-dotenv
 requests
 flask
 boto3
+bcrypt
+psycopg2-binary
+alembic

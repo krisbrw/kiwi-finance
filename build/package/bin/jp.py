@@ -1,4 +1,4 @@
-#!C:\Users\krisb\AppData\Local\Programs\Python\Python313\python.exe
+#!/var/lang/bin/python3.12
 
 import sys
 import json

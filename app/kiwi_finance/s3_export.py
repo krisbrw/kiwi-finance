@@ -46,9 +46,9 @@ def _upload_rows_to_s3(
     }
 
 
-def upload_transactions_to_s3(bucket: str | None = None, prefix: str | None = None):
+def upload_transactions_to_s3(bucket: str | None = None, prefix: str | None = None, user_id: str | None = None):
     return _upload_rows_to_s3(
-        get_transactions_local(),
+        get_transactions_local(user_id=user_id),
         bucket=bucket or Config.AWS_S3_BUCKET,
         prefix=prefix or Config.AWS_S3_TRANSACTIONS_PREFIX,
         filename_prefix="transactions",
@@ -56,9 +56,9 @@ def upload_transactions_to_s3(bucket: str | None = None, prefix: str | None = No
     )
 
 
-def upload_accounts_to_s3(bucket: str | None = None, prefix: str | None = None):
+def upload_accounts_to_s3(bucket: str | None = None, prefix: str | None = None, user_id: str | None = None):
     return _upload_rows_to_s3(
-        get_accounts_local(),
+        get_accounts_local(user_id=user_id),
         bucket=bucket or Config.AWS_S3_BUCKET,
         prefix=prefix or Config.AWS_S3_ACCOUNTS_PREFIX,
         filename_prefix="accounts",

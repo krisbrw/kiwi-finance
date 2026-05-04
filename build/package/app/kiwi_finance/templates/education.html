@@ -1,0 +1,355 @@
+{% extends "_layout.html" %}
+
+{% block title %}Financial Education — Kiwi Finance{% endblock %}
+
+{% block head %}
+<style>
+.page-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, #f0fdf4 0%, #fffbeb 50%, #eff6ff 100%);
+    background-size: 300% 300%;
+    animation: bgShift 16s ease infinite;
+}
+@keyframes bgShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+.page-wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.page-hero { margin-bottom: 48px; animation: fadeUp 0.4s ease both; }
+.page-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--amber-bg); border: 1px solid var(--amber-border, #fde68a);
+    color: #92400e; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.page-title { font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.page-sub   { font-size: 16px; color: var(--text-muted); max-width: 580px; line-height: 1.65; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Topic filter tabs ── */
+.topic-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px;
+    animation: fadeUp 0.4s ease 0.1s both;
+}
+.topic-tab {
+    padding: 7px 16px; border-radius: 100px;
+    border: 1px solid var(--border); background: white;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; transition: all 150ms;
+}
+.topic-tab:hover { border-color: var(--green); color: var(--green); }
+.topic-tab.active { background: var(--green); border-color: var(--green); color: white; }
+
+/* ── Featured article ── */
+.featured-article {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    border-radius: 20px; padding: 48px; margin-bottom: 36px;
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center;
+    animation: fadeUp 0.4s ease 0.15s both;
+    cursor: pointer; transition: transform 200ms, box-shadow 200ms;
+    text-decoration: none; color: inherit;
+}
+.featured-article:hover { transform: translateY(-3px); box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.fa-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(22,163,74,0.25); border: 1px solid rgba(22,163,74,0.4);
+    color: #4ade80; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+}
+.fa-title { font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: white; letter-spacing: -0.025em; margin-bottom: 12px; line-height: 1.25; }
+.fa-desc  { font-size: 14px; color: #94a3b8; line-height: 1.65; margin-bottom: 20px; max-width: 520px; }
+.fa-meta  { display: flex; align-items: center; gap: 16px; }
+.fa-read-time { font-size: 12px; color: #64748b; }
+.fa-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green); color: white;
+    padding: 9px 20px; border-radius: 9px;
+    font-size: 13px; font-weight: 600;
+    transition: background 150ms;
+}
+.fa-cta:hover { background: var(--green-hover); }
+.fa-visual { font-size: 80px; line-height: 1; }
+
+/* ── Article grid ── */
+.articles-section { margin-bottom: 48px; animation: fadeUp 0.4s ease 0.2s both; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title  { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.section-link   { font-size: 13px; color: var(--green); text-decoration: none; font-weight: 600; }
+.section-link:hover { text-decoration: underline; }
+
+.articles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+.article-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; cursor: pointer;
+    transition: box-shadow 200ms, transform 200ms;
+    text-decoration: none; color: inherit; display: block;
+}
+.article-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); transform: translateY(-3px); }
+
+.ac-thumb {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+}
+.ac-body { padding: 16px 18px 20px; }
+.ac-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px; margin-bottom: 10px;
+}
+.ac-title { font-size: 14px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
+.ac-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+.ac-meta  { font-size: 11px; color: var(--text-subtle); display: flex; align-items: center; gap: 8px; }
+
+/* ── Glossary ── */
+.glossary-section { animation: fadeUp 0.4s ease 0.25s both; }
+.glossary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.glossary-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; transition: box-shadow 200ms, transform 200ms;
+}
+.glossary-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-2px); }
+.glossary-term { font-size: 14px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.glossary-def  { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+
+/* ── Calculator strip ── */
+.calc-strip {
+    background: linear-gradient(135deg, var(--green-bg) 0%, var(--blue-bg) 100%);
+    border: 1px solid var(--green-border); border-radius: 20px;
+    padding: 36px 40px; margin: 40px 0;
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center;
+    animation: fadeUp 0.4s ease 0.3s both;
+}
+.cs-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+.cs-sub   { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.calc-tools { display: flex; gap: 10px; flex-wrap: wrap; }
+.calc-btn {
+    padding: 9px 18px; background: white; border: 1px solid var(--border);
+    border-radius: 9px; font: 600 13px 'Inter', sans-serif; color: var(--text);
+    cursor: pointer; transition: all 150ms; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.calc-btn:hover { border-color: var(--green); color: var(--green); box-shadow: 0 4px 12px rgba(22,163,74,0.15); }
+
+@media (max-width: 900px) {
+    .articles-grid { grid-template-columns: 1fr 1fr; }
+    .featured-article { grid-template-columns: 1fr; }
+    .fa-visual { display: none; }
+    .calc-strip { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .page-wrap { padding: 32px 18px 72px; }
+    .articles-grid { grid-template-columns: 1fr; }
+    .glossary-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-bg"></div>
+
+<div class="page-wrap">
+    <div class="page-hero">
+        <div class="page-eyebrow">📚 Financial Education</div>
+        <h1 class="page-title">Learn money. Build wealth.</h1>
+        <p class="page-sub">From budgeting basics to advanced investing strategies — everything you need to make smarter financial decisions, explained clearly.</p>
+    </div>
+
+    <!-- Topic tabs -->
+    <div class="topic-tabs">
+        <button class="topic-tab active" onclick="filterTopic(this, 'all')">All Topics</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'budgeting')">💰 Budgeting</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'investing')">📈 Investing</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'debt')">🔗 Debt</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'credit')">💳 Credit</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'savings')">🏦 Savings</button>
+        <button class="topic-tab" onclick="filterTopic(this, 'taxes')">🧾 Taxes</button>
+    </div>
+
+    <!-- Featured -->
+    <a class="featured-article" href="#">
+        <div>
+            <div class="fa-tag">⭐ Featured Guide</div>
+            <div class="fa-title">The Complete Guide to Building Your First Emergency Fund</div>
+            <div class="fa-desc">Most financial experts agree: 3–6 months of expenses in a liquid account is the single most important financial safety net you can build. Here's exactly how to do it, step by step.</div>
+            <div class="fa-meta">
+                <span class="fa-read-time">📖 8 min read · Savings</span>
+                <span class="fa-cta">Read Guide →</span>
+            </div>
+        </div>
+        <div class="fa-visual">🌱</div>
+    </a>
+
+    <!-- Budgeting articles -->
+    <div class="articles-section" data-topic="budgeting">
+        <div class="section-header">
+            <div class="section-title">💰 Budgeting</div>
+            <a href="#" class="section-link">View all →</a>
+        </div>
+        <div class="articles-grid">
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#f0fdf4">🎯</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#dcfce7;color:#166534">Budgeting</span>
+                    <div class="ac-title">The 50/30/20 Rule: A Simple Framework That Actually Works</div>
+                    <div class="ac-desc">Split your income into needs, wants, and savings with this proven method used by millions.</div>
+                    <div class="ac-meta">📖 5 min · Beginner</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#fffbeb">📊</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#fef3c7;color:#92400e">Budgeting</span>
+                    <div class="ac-title">Zero-Based Budgeting: Give Every Dollar a Job</div>
+                    <div class="ac-desc">Assign every dollar of income a purpose before the month begins. No money left unaccounted for.</div>
+                    <div class="ac-meta">📖 6 min · Intermediate</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#eff6ff">🔄</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#dbeafe;color:#1e40af">Budgeting</span>
+                    <div class="ac-title">How to Automate Your Finances in 5 Steps</div>
+                    <div class="ac-desc">Set up automatic transfers so saving and bill-paying happen without you having to think about it.</div>
+                    <div class="ac-meta">📖 7 min · Beginner</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Investing articles -->
+    <div class="articles-section" data-topic="investing">
+        <div class="section-header">
+            <div class="section-title">📈 Investing</div>
+            <a href="#" class="section-link">View all →</a>
+        </div>
+        <div class="articles-grid">
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#faf5ff">🌱</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#f3e8ff;color:#6b21a8">Investing</span>
+                    <div class="ac-title">Index Funds vs. Individual Stocks: What's Right for You?</div>
+                    <div class="ac-desc">Most investors are better off with low-cost index funds. Here's the data behind that claim.</div>
+                    <div class="ac-meta">📖 9 min · Intermediate</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#f0fdf4">📅</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#dcfce7;color:#166534">Investing</span>
+                    <div class="ac-title">Dollar-Cost Averaging: The Stress-Free Way to Invest</div>
+                    <div class="ac-desc">Invest a fixed amount on a regular schedule regardless of market conditions. Simple and effective.</div>
+                    <div class="ac-meta">📖 5 min · Beginner</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#fff7ed">🏦</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#ffedd5;color:#9a3412">Investing</span>
+                    <div class="ac-title">Roth IRA vs. Traditional IRA: Which Should You Choose?</div>
+                    <div class="ac-desc">Tax-free growth now or tax deductions today? The answer depends on your situation.</div>
+                    <div class="ac-meta">📖 8 min · Intermediate</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Debt articles -->
+    <div class="articles-section" data-topic="debt">
+        <div class="section-header">
+            <div class="section-title">🔗 Debt</div>
+            <a href="#" class="section-link">View all →</a>
+        </div>
+        <div class="articles-grid">
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#fef2f2">⚡</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#fee2e2;color:#991b1b">Debt</span>
+                    <div class="ac-title">Avalanche vs. Snowball: The Best Way to Pay Off Debt</div>
+                    <div class="ac-desc">Two proven strategies for eliminating debt. One saves more money, one builds more momentum.</div>
+                    <div class="ac-meta">📖 6 min · Beginner</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#fffbeb">💳</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#fef3c7;color:#92400e">Debt</span>
+                    <div class="ac-title">How to Negotiate a Lower Interest Rate on Your Credit Card</div>
+                    <div class="ac-desc">A single phone call can save you hundreds. Here's exactly what to say.</div>
+                    <div class="ac-meta">📖 4 min · Beginner</div>
+                </div>
+            </a>
+            <a class="article-card" href="#">
+                <div class="ac-thumb" style="background:#eff6ff">🔄</div>
+                <div class="ac-body">
+                    <span class="ac-tag" style="background:#dbeafe;color:#1e40af">Debt</span>
+                    <div class="ac-title">Balance Transfer Cards: When They Help and When They Hurt</div>
+                    <div class="ac-desc">0% APR offers can be powerful tools — if you understand the fine print.</div>
+                    <div class="ac-meta">📖 7 min · Intermediate</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Calculator strip -->
+    <div class="calc-strip">
+        <div>
+            <div class="cs-title">Financial Calculators</div>
+            <div class="cs-sub">Run the numbers on your biggest financial decisions. Compound interest, loan payoff, retirement projections, and more.</div>
+        </div>
+        <div class="calc-tools">
+            <a href="#" class="calc-btn">📈 Compound Interest</a>
+            <a href="#" class="calc-btn">🏠 Mortgage</a>
+            <a href="#" class="calc-btn">💳 Debt Payoff</a>
+            <a href="#" class="calc-btn">🎯 Retirement</a>
+        </div>
+    </div>
+
+    <!-- Glossary -->
+    <div class="glossary-section">
+        <div class="section-header">
+            <div class="section-title">📖 Financial Glossary</div>
+        </div>
+        <div class="glossary-grid">
+            <div class="glossary-card">
+                <div class="glossary-term">💹 APR</div>
+                <div class="glossary-def">Annual Percentage Rate — the yearly cost of borrowing money, including interest and fees. Always compare APRs when evaluating loans or credit cards.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">🏦 Net Worth</div>
+                <div class="glossary-def">Your total assets minus your total liabilities. The single most important number for measuring your overall financial health over time.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">📊 Expense Ratio</div>
+                <div class="glossary-def">The annual fee charged by a mutual fund or ETF, expressed as a percentage of your investment. Even small differences compound significantly over decades.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">🔄 Compound Interest</div>
+                <div class="glossary-def">Earning interest on your interest. The most powerful force in personal finance — it works for you when saving and against you when in debt.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">🛡️ Emergency Fund</div>
+                <div class="glossary-def">3–6 months of living expenses kept in a liquid, accessible account. Your first line of defense against unexpected financial shocks.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">📋 Credit Utilization</div>
+                <div class="glossary-def">The percentage of your available credit you're currently using. Keeping this below 30% (ideally below 10%) is one of the fastest ways to improve your credit score.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTopic(btn, topic) {
+    document.querySelectorAll('.topic-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.articles-section[data-topic]').forEach(s => {
+        s.style.display = (topic === 'all' || s.dataset.topic === topic) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

@@ -36,17 +36,29 @@ def get_plaid_client():
     return plaid_api.PlaidApi(api_client)
 
 
-def create_link_token(user_id: str):
+def create_link_token(user_id: str, access_token: str | None = None):
+    """
+    Create a Link token for connecting or updating Plaid items.
+    
+    Args:
+        user_id: The user's ID
+        access_token: Optional access token for update mode (re-authentication)
+    """
     client = get_plaid_client()
 
-    request = LinkTokenCreateRequest(
-        user=LinkTokenCreateRequestUser(client_user_id=user_id),
-        client_name="Kiwi Finance",
-        products=[Products("transactions")],
-        country_codes=[CountryCode("US")],
-        language="en",
-    )
-
+    request_params = {
+        "user": LinkTokenCreateRequestUser(client_user_id=user_id),
+        "client_name": "Kiwi Finance",
+        "products": [Products("transactions")],
+        "country_codes": [CountryCode("US")],
+        "language": "en",
+    }
+    
+    # If access_token is provided, use update mode for re-authentication
+    if access_token:
+        request_params["access_token"] = access_token
+    
+    request = LinkTokenCreateRequest(**request_params)
     response = client.link_token_create(request)
     return response.to_dict()
 

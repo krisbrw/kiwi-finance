@@ -155,6 +155,60 @@
             box-shadow: 0 4px 12px rgba(22,163,74,0.3);
         }
 
+        .btn-refresh {
+            height: 34px;
+            padding: 0 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: var(--text);
+            font: 600 13px 'Inter', sans-serif;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color 150ms, background 150ms, transform 150ms, box-shadow 150ms;
+        }
+        .btn-refresh:hover:not(:disabled) {
+            border-color: #9ca3af;
+            background: var(--bg);
+            transform: translateY(-1px);
+        }
+        .btn-refresh:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-refresh svg.spin {
+            animation: spinAnim 0.8s linear infinite;
+        }
+        @keyframes spinAnim {
+            to { transform: rotate(360deg); }
+        }
+        .refresh-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 250ms, transform 250ms;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .refresh-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .refresh-toast.success { background: var(--green); }
+        .refresh-toast.error   { background: var(--red); }
+
         /* ── Chart grid ──────────────────────────── */
         .chart-stack { display: flex; flex-direction: column; gap: 16px; }
 
@@ -230,10 +284,23 @@
 {% block content %}
 
     <main>
-        <div class="page-header">
-            <h1 class="page-title">Spending Dashboard</h1>
-            <p class="page-desc">Your financial picture, visualized. Use date filters to narrow the view.</p>
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+                <h1 class="page-title">Spending Dashboard</h1>
+                <p class="page-desc">Your financial picture, visualized. Use date filters to narrow the view.</p>
+            </div>
+            <button class="btn-refresh" id="btn-refresh" type="button">
+                <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
+                </svg>
+                Refresh Now
+            </button>
         </div>
+
+        <div class="refresh-toast" id="refresh-toast"></div>
 
         <!-- Stats -->
         <section class="stats-grid">
@@ -608,6 +675,39 @@
         }
 
         document.getElementById("apply-filters").addEventListener("click", loadCharts);
+
+        /* ── Refresh Now ────────────────────────────────────── */
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("refresh-toast");
+            toast.textContent = message;
+            toast.className = `refresh-toast ${type} show`;
+            setTimeout(() => { toast.classList.remove("show"); }, 3500);
+        }
+
+        document.getElementById("btn-refresh").addEventListener("click", async () => {
+            const btn  = document.getElementById("btn-refresh");
+            const icon = document.getElementById("refresh-icon");
+
+            btn.disabled = true;
+            icon.classList.add("spin");
+            btn.childNodes[2].textContent = " Refreshing…";
+
+            try {
+                const res  = await fetch("/run_daily_sandbox_pipeline", { method: "POST" });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Pipeline failed");
+
+                await Promise.all([loadSummary(), loadCharts()]);
+                showToast("Data refreshed successfully", "success");
+            } catch (err) {
+                showToast(err.message || "Refresh failed", "error");
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove("spin");
+                btn.childNodes[2].textContent = " Refresh Now";
+            }
+        });
+
         boot();
     </script>
 {% endblock %}

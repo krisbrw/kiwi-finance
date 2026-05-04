@@ -1,0 +1,273 @@
+{% extends "_layout.html" %}
+
+{% block title %}Bank Accounts — Kiwi Finance{% endblock %}
+
+{% block head %}
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<style>
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(ellipse 70% 40% at 80% 0%,  rgba(22, 163, 74, 0.06), transparent),
+            radial-gradient(ellipse 50% 30% at 10% 100%, rgba(37, 99, 235, 0.05), transparent),
+            #f9fafb;
+    }
+
+    main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 36px 28px 80px;
+    }
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+    .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        margin-bottom: 4px;
+    }
+    .page-desc { font-size: 13px; color: var(--text-muted); }
+
+    .accounts-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .account-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .account-info h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .account-info p {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 150ms;
+    }
+
+    .btn-primary {
+        background: var(--green);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--green-hover);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+    }
+
+    .btn-secondary:hover {
+        border-color: #9ca3af;
+        background: var(--bg);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-ok {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-muted);
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 250ms, transform 250ms;
+        z-index: 999;
+        pointer-events: none;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--red); }
+</style>
+{% endblock %}
+
+{% block content %}
+<main>
+    <div class="page-header">
+        <h1 class="page-title">Bank Accounts</h1>
+        <p class="page-desc">Manage your connected bank accounts and re-authenticate if needed.</p>
+    </div>
+
+    <div class="accounts-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 16px; font-weight: 700;">Connected Accounts</h2>
+            <button class="btn btn-primary" id="btn-add-account">+ Add Account</button>
+        </div>
+
+        <div id="accounts-list">
+            <div class="empty-state">
+                <p>Loading accounts...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+</main>
+
+<script>
+    let plaidHandler = null;
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
+    async function loadAccounts() {
+        try {
+            const response = await fetch('/get_items');
+            const data = await response.json();
+            
+            const container = document.getElementById('accounts-list');
+            
+            if (!data.items || data.items.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No accounts connected yet. Click "Add Account" to get started.</p></div>';
+                return;
+            }
+
+            container.innerHTML = data.items.map((item, index) => `
+                <div class="account-item">
+                    <div class="account-info">
+                        <h3>Bank Account ${index + 1}</h3>
+                        <p>Item ID: ${item.item_id}</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-secondary" onclick="reAuthAccount('${item.access_token}')">
+                            Re-authenticate
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading accounts:', error);
+            showToast('Failed to load accounts', 'error');
+        }
+    }
+
+    async function initPlaidLink(accessToken = null) {
+        try {
+            const response = await fetch('/create_link_token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ access_token: accessToken })
+            });
+            const data = await response.json();
+
+            if (plaidHandler) {
+                plaidHandler.destroy();
+            }
+
+            plaidHandler = Plaid.create({
+                token: data.link_token,
+                onSuccess: async (public_token, metadata) => {
+                    try {
+                        const response = await fetch('/exchange_public_token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ public_token })
+                        });
+                        const result = await response.json();
+                        
+                        if (accessToken) {
+                            showToast('Account re-authenticated successfully!', 'success');
+                        } else {
+                            showToast('Account connected successfully!', 'success');
+                        }
+                        
+                        loadAccounts();
+                    } catch (error) {
+                        showToast('Failed to save account', 'error');
+                    }
+                },
+                onExit: (err, metadata) => {
+                    if (err) {
+                        console.error('Plaid Link error:', err);
+                        showToast('Connection failed', 'error');
+                    }
+                }
+            });
+
+            plaidHandler.open();
+        } catch (error) {
+            console.error('Error initializing Plaid Link:', error);
+            showToast('Failed to initialize Plaid Link', 'error');
+        }
+    }
+
+    function reAuthAccount(accessToken) {
+        initPlaidLink(accessToken);
+    }
+
+    document.getElementById('btn-add-account').addEventListener('click', () => {
+        initPlaidLink();
+    });
+
+    loadAccounts();
+</script>
+{% endblock %}

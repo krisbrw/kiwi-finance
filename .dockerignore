@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+.vscode
+__pycache__
+*.pyc
+*.pyo
+data/
+build/
+tests/
+*.md
+infra/
+deploy.ps1
